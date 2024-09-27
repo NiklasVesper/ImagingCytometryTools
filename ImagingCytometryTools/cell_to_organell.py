@@ -70,7 +70,7 @@ def cell_to_organell_basic(Cells, Cytoplasm, Nucleus, Nucleus_count):
                 cytoplasm_position = shapely.geometry.Point(cytoplasm) #creates a point at the center of the cytoplasm object
                 count_cytoplasm = count_cytoplasm + 1 #adds a counter to the counter
 
-                if cytoplasm_position.within(cell_shape) == True:
+                if cytoplasm_position.within(cell_shape) == True: #checks if the center of the cytoplasm is within the cell
 
                     count_nucleus = -1 #counter
                     nucleus_list = [] #list of all found nuclei
@@ -78,10 +78,10 @@ def cell_to_organell_basic(Cells, Cytoplasm, Nucleus, Nucleus_count):
                         nucleus_position = shapely.geometry.Point(nucleus)
                         count_nucleus = count_nucleus + 1 #adds a counter to the counter
 
-                        if nucleus_position.within(cell_shape) == True:
+                        if nucleus_position.within(cell_shape) == True: #checks if the center of the nucleus is within the cell
                             nucleus_list.append(count_nucleus)
 
-                    if len(nucleus_list) == Nucleus_count:
+                    if len(nucleus_list) == Nucleus_count: #checks the lenth of the nucleus list
 
                         new_row = {}  # Creates a new Row for all the localistions
 
@@ -96,7 +96,8 @@ def cell_to_organell_basic(Cells, Cytoplasm, Nucleus, Nucleus_count):
                                         'Location_Center_Y': Location_Center_Y,
                                         'AreaShape_MinFeretDiameter': AreaShape_MinFeretDiameter,
                                         'AreaShape_MaxFeretDiameter': AreaShape_MaxFeretDiameter})
-
+                        
+                        # adds the mean intenitys to the new row
                         for marker in get_markers_from_segmentation(Cells):
                             MeanIntensity_Cell = DataFrameDict_Full_cell[key]['Intensity_' + marker].to_list()[count_cell]
                             MeanIntensity_Cytoplasm = DataFrameDict_Cytoplasm[key]['Intensity_' + marker].to_list()[count_cytoplasm]
@@ -105,8 +106,8 @@ def cell_to_organell_basic(Cells, Cytoplasm, Nucleus, Nucleus_count):
                             new_row.update({marker + '_Cell': MeanIntensity_Cell,
                                        marker + '_Cytoplasm': MeanIntensity_Cytoplasm,
                                        marker + '_Nucleus': MeanIntensity_Nucleus})
-
-                        single_nuclear_cells.loc[len(single_nuclear_cells)] = new_row
-                    break
                     
+                        single_nuclear_cells.loc[len(single_nuclear_cells)] = new_row #adds the new row to the dataframe
+                    break
+             
     return(single_nuclear_cells)
