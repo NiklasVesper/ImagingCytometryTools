@@ -8,7 +8,7 @@ import re
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
-from ImagingCytometryToolsIMC.get_markers import get_markers_from_segmentation
+from ImagingCytometryTools.get_markers import get_markers_from_segmentation
 
 # for mostly round cells
 def cell_to_organell_basic(Cells, Cytoplasm, Nucleus, Nucleus_count):
