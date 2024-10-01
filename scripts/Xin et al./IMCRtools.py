@@ -2,7 +2,7 @@ from imctools.io.txt.txtparser import TxtParser
 import os
 import scandir as sd
 
-folder_dir = r'D:\Basel' # folder directory
+folder_dir = r'D:\ATF6' # folder directory
 
 #generates images
 for paths, dirs, files in sd.walk(folder_dir): #goes throw all files and folders in given directory
