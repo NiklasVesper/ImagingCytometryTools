@@ -2,7 +2,7 @@ import re
 import pandas as pd
 
 
-#
+#gets protein markers from a cellprofiler file
 def get_markers_from_segmentation(Cells): # Helper funktion to get the markers from the segmentation dataset
     first_column = list(Cells.columns.values.tolist()) # gets you the keys from a pd df as list
     clean_markers = [] # empty list for markers
