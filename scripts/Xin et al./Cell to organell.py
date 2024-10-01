@@ -6,9 +6,9 @@ from ImagingCytometryToolsIMC.cell_to_organell import cell_to_organell_basic
 from ImagingCytometryToolsIMC.neigboorhood import neigboorhood
 
 
-folder_dir = r'D:\Basel'# folder directory
+folder_dir = r'D:\ATF6'# folder directory
 
-
+#first neighborhood analysis
 for paths, dirs, files in sd.walk(folder_dir): #goes throw all files and folders in given directory
 
     for file in os.listdir(paths): #goes throw all files in a folder
@@ -34,7 +34,7 @@ for paths, dirs, files in sd.walk(folder_dir): #goes throw all files and folders
                 neigboorhood_all = neigboorhood(pd.read_csv(filedir)) # calculates the neighborhood
                 neigboorhood_all.to_csv(filedir_images_string + '/' + filename_string[:-18] + '_neighborhood.csv') # exports the analysis
 
-
+#Matching subcellular locations
 for paths, dirs, files in sd.walk(folder_dir): #goes throw all files and folders in given directory
 
     for file in os.listdir(paths): #goes throw all files in a folder
@@ -80,7 +80,7 @@ for paths, dirs, files in sd.walk(folder_dir): #goes throw all files and folders
                             single_cells_and_organells = cell_to_organell_basic(Full_cell, Cytoplasm, Nucleus,1) # matches subcellular locations
                             single_cells_and_organells.to_csv(filedir_images_string + '/' + filename_string[:-18] +'_single_cells_and_organells.csv') # exports the file
 
-
+#second neighborhood analysis
 for paths, dirs, files in sd.walk(folder_dir): #goes throw all files and folders in given directory
 
     for file in os.listdir(paths): #goes throw all files in a folder
@@ -115,63 +115,3 @@ for paths, dirs, files in sd.walk(folder_dir): #goes throw all files and folders
 
             neigboorhood_sub = neigboorhood(df)
             neigboorhood_sub.to_csv(filedir_images_string + '/' + filename_string[:-len('single_cells_and_organells')-5] + '_subcell_neighborhood.csv')
-
-'''
-for paths, dirs, files in sd.walk(folder_dir): #goes throw all files and folders in given directory
-
-    for file in os.listdir(paths): #goes throw all files in a folder
-        filedir = os.path.join(paths, file) #returns fuull file directory
-
-        dir_list = []
-        if filedir.endswith("RunCellpose_C.csv"): # returns all files that end with txt
-
-            filename = os.path.basename(file)
-            filename_string = str(filename)
-
-            filedir_string = str(filedir)[:-len(filename) - 5]
-            filedir_images_string = filedir_string + r'\subcellular localisation'
-
-            dir_list.append(filedir)
-
-            if os.path.isdir(filedir_images_string) == True:
-                pass
-            else:
-                os.makedirs(filedir_images_string)
-
-            for paths, dirs, files in sd.walk(filedir_string + "/csv"):  # goes throw all files and folders in given directory
-
-                for file in os.listdir(paths):  # goes throw all files in a folder
-                    filedir = os.path.join(paths, file)  # returns full file directory
-
-                    if filedir.endswith("RunCellpose_N.csv"):
-                        dir_list.append(filedir)
-                    if filedir.endswith("Cytoplasm.csv"):
-                        dir_list.append(filedir)
-                    if filedir.endswith("Outline_cell_1.tiff"):
-
-                        filename = os.path.basename(file)
-                        filename_string = str(filename)
-                        filedir_string = str(filedir)[:-len(filename)-1]
-
-                        dir_list.append(filedir_string)
-
-                    if filedir.endswith("Outline_nucleus_1.tiff"):
-
-                        filename = os.path.basename(file)
-                        filename_string = str(filename)
-                        filedir_string = str(filedir)[:-len(filename)]
-
-                        dir_list.append(filedir_string)
-
-            if len(dir_list) == 5:
-                print(dir_list)
-
-                Full_cell = pd.read_csv(dir_list[0])
-                Cytoplasm = pd.read_csv(dir_list[1])
-                Nucleus = pd.read_csv(dir_list[2])
-                Cell_outlines = dir_list[3]
-                Nucleus_outlines = dir_list[4]
-
-                single_cells_and_organells = cell_to_organell_advanced(Full_cell, Cytoplasm, Nucleus,1,Cell_outlines,Nucleus_outlines)
-                #single_cells_and_organells.to_csv(filedir_images_string + '/' + filename_string[:-18] +'_single_cells_and_organells.csv')
-'''
