@@ -2,8 +2,8 @@ import pandas as pd
 import os
 import scandir as sd
 
-from ImagingCytometryToolsIMC.cell_to_organell import cell_to_organell_basic
-from ImagingCytometryToolsIMC.neigboorhood import neigboorhood
+from ImagingCytometryTools.cell_to_organell import cell_to_organell_basic
+from ImagingCytometryTools.neigboorhood import neigboorhood
 
 
 folder_dir = r'D:\ATF6'# folder directory
