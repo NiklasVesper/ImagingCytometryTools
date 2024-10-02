@@ -4,8 +4,7 @@ import os
 
 from ImagingCytometryToolsIMC.neigboorhood import neigboorhood_cell_type
 
-
-folder_dir = r'D:\ATF6'
+folder_dir = r'D:\ATF6'# folder directory
 
 for paths, dirs, files in sd.walk(folder_dir): #goes throw all files and folders in given directory
 
