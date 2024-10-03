@@ -2,7 +2,7 @@ import pandas as pd
 import scandir as sd
 import os
 
-from ImagingCytometryToolsIMC.neigboorhood import neigboorhood_cell_type
+from ImagingCytometryTools.neigboorhood import neigboorhood_cell_type
 
 folder_dir = r'D:\ATF6'# folder directory
 
