@@ -2,7 +2,45 @@ import pandas as pd
 import scandir as sd
 import os
 
-from ImagingCytometryTools.neigboorhood import neigboorhood_cell_type
+import pandas as pd
+import numpy as np
+import shapely.geometry
+import warnings
+import re
+
+warnings.simplefilter(action='ignore', category=FutureWarning)
+
+# gives you the neigbooring cell types
+def neigboorhood_cell_type(Cell_type, Subtype,file):
+
+    Neigboorhood_fin= []
+    for index, cell in file.iterrows():
+
+        if cell['Cell_types'] == Cell_type and cell['immune_type'] == Subtype:
+
+            Neigboorhood = re.split(r',', cell['Neigboorhood'].replace('[', '').replace(']', ''))
+
+            Neigboorhood_list = []
+            for x in Neigboorhood:
+                try:
+                    Neigboorhood_list.append(int(float(x)))
+                except ValueError:
+                    pass
+
+
+            Neigboorhood_cell = []
+            for index, cell in file.iterrows():
+
+                if cell['Cell_number'] in Neigboorhood_list:
+                    Neigboorhood_cell.append(cell['Cell_types'])
+
+            Neigboorhood_fin.append(Neigboorhood_cell)
+            print(Neigboorhood_cell)
+
+        else:
+            Neigboorhood_fin.append('currently not of interest')
+
+    return(Neigboorhood_fin)
 
 folder_dir = r'D:\ATF6'# folder directory
 
