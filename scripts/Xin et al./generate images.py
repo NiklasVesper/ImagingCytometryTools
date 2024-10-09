@@ -2,15 +2,23 @@ from imctools.io.txt.txtparser import TxtParser
 import os
 import scandir as sd
 
+'''
+The "generate images" script makes images out of compensated IMC data (.mcd format).
+The script takes only compensated images.
+
+Here the images were compensated with the script available at https://github.com/BodenmillerGroup/cyTOFcompensation/tree/master.
+The corresponding paper you find under: https://doi.org/10.1016/j.cels.2018.02.010
+'''
+
 folder_dir = r'D:\ATF6' # folder directory
 
 #generates images
 for paths, dirs, files in sd.walk(folder_dir): #goes throw all files and folders in given directory
 
     for file in os.listdir(paths): #goes throw all files in a folder
-        filedir = os.path.join(paths, file) #returns fuull file directory
+        filedir = os.path.join(paths, file) #returns full file directory
 
-        if filedir.endswith("_comp.txt"): # returns all files that end with txt
+        if filedir.endswith("_comp.txt"): # returns all files that end with "_comp.txt"
 
             print(filedir)
 
@@ -40,4 +48,4 @@ for paths, dirs, files in sd.walk(folder_dir): #goes throw all files and folders
 
             parser = TxtParser(str(new_file_name)) # calls parser
             ac_data = parser.get_acquisition_data() # gets data
-            ac_data.save_tiffs(filedir_images_string,basename = filename_new_string, compression=0) # saves tiffs 
+            ac_data.save_tiffs(filedir_images_string,basename = filename_new_string, compression=0) # saves tiffs
