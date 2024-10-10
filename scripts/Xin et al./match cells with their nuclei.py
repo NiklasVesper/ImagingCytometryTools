@@ -8,47 +8,57 @@ import warnings
 import re
 
 '''
+The "match cells with their nuclei" script links objects that were independently identified in a CellProfiler pipeline.
 
+The CellProfiler pipeline can be found under:
+https://github.com/MrTheLukasBoom/ImagingCytometryTools/blob/main/Cellprofiler%20pipelines/Xin%20et%20al.%20Segmentation%20Deeplearning%20Imaging%20Mass%20Cytometry.cpproj
+
+For this CellProfiler pipeline Cellpose 2.0 is required as a plugin. 
+Instructions for the plugin installation can be found under:
+https://github.com/CellProfiler/CellProfiler-plugins/tree/master
+
+CellProfiler: https://doi.org/10.1186/s12859-021-04344-9
+Cellpose 2.0: https://doi.org/10.1038/s41592-022-01663-4
 '''
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 #gets protein markers from a CellProfiler file
 def get_markers_from_segmentation(Cells):
-    first_column = list(Cells.columns.values.tolist()) #gets you the keys from a pd df as list
+    first_column = list(Cells.columns.values.tolist()) #gets you the keys from a pandas data frame as list
     clean_markers = []  #empty list for markers
 
     for element in first_column:  #gets you each element in the key list
         marker_cond = re.findall('MeanIntensity_', element)  #condition to find the markers
 
-        if bool(marker_cond) == True:  # if there is an element that fits the description do the following
-            marker = element[element.find('MeanIntensity_'):]  # find all the symbols after mean intensity
-            marker_str = str(marker)  # turns marker into strings for the list
-            clean_markers.append(marker_str)  # append to marker list
+        if bool(marker_cond) == True:  #if there is an element that fits the description do the following
+            marker = element[element.find('MeanIntensity_'):]  #find all the symbols after mean intensity
+            marker_str = str(marker)  #turns marker into strings for the list
+            clean_markers.append(marker_str)  #append to marker list
 
-    return (clean_markers)  # returns marker list
+    return(clean_markers)  #returns marker list
 
 
-# for mostly round cells
+#match cells with their nuclei for mostly round cells
 def cell_to_organell_basic(Cells, Cytoplasm, Nucleus):
     print('I am working :)')
 
-    # create unique list of names of images
-    UniqueNames_Full_cell = Cells.ImageNumber.unique()  # creates a list of all unique images
-    UniqueNames_Cytoplasm = Cytoplasm.ImageNumber.unique()  # creates a list of all unique images
-    UniqueNames_Nucleus = Nucleus.ImageNumber.unique()  # creates a list of all unique images
+    #creates lists of all unique images for the different localizations
+    UniqueNames_Full_cell = Cells.ImageNumber.unique()
+    UniqueNames_Cytoplasm = Cytoplasm.ImageNumber.unique()
+    UniqueNames_Nucleus = Nucleus.ImageNumber.unique()
 
-    # create a data frame dictionary to store your data frames
-    DataFrameDict_Full_cell = {elem: pd.DataFrame() for elem in UniqueNames_Full_cell}  # creates a dictionary of all unique images
-    DataFrameDict_Cytoplasm = {elem: pd.DataFrame() for elem in UniqueNames_Cytoplasm}  # creates a dictionary of all unique images
-    DataFrameDict_Nucleus = {elem: pd.DataFrame() for elem in UniqueNames_Nucleus}  # creates a dictionary of all unique images
+    #creates a pandas data frame dictionary of all unique images for the different localizations
+    DataFrameDict_Full_cell = {elem: pd.DataFrame() for elem in UniqueNames_Full_cell}
+    DataFrameDict_Cytoplasm = {elem: pd.DataFrame() for elem in UniqueNames_Cytoplasm}
+    DataFrameDict_Nucleus = {elem: pd.DataFrame() for elem in UniqueNames_Nucleus}
 
-    # creates a data frame to store matched subcellular locations
-    columns = ['ImageNumber', 'Location_Center_X', 'Location_Center_Y', 'AreaShape_MinFeretDiameter', 'AreaShape_MaxFeretDiameter', ]  # list for essential values and markers
-    for markers in get_markers_from_segmentation(Cells):  # get all markers
-        columns.append(markers + '_Cell')  # creates a column for the full cell
-        columns.append(markers + '_Cytoplasm')  # creates a column for the cytoplasm
-        columns.append(markers + '_Nucleus')  # creates a column for the nucleus
+    #creates column name list for  to store the relevant information of matched subcellular locations
+    columns = ['ImageNumber', 'Location_Center_X', 'Location_Center_Y', 'AreaShape_MinFeretDiameter', 'AreaShape_MaxFeretDiameter', ]
+    for markers in get_markers_from_segmentation(Cells):
+        columns.append(markers + '_Cell')
+        columns.append(markers + '_Cytoplasm')
+        columns.append(markers + '_Nucleus')
 
     single_nuclear_cells = pd.DataFrame(columns=columns)  # empty dataframe for all markers and subcellular locations
 
