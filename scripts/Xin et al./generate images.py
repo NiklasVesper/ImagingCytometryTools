@@ -6,7 +6,7 @@ import scandir as sd
 The "generate images" script makes images out of compensated IMC data (.mcd format).
 The script takes only compensated images.
 
-Here the images were compensated with the script available at https://github.com/BodenmillerGroup/cyTOFcompensation/tree/master.
+Here the images were compensated with the script available at: https://github.com/BodenmillerGroup/cyTOFcompensation/tree/master
 The corresponding paper you find under: https://doi.org/10.1016/j.cels.2018.02.010
 '''
 
