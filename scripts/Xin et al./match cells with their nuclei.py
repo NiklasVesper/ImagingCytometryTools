@@ -72,7 +72,7 @@ def cell_to_organell_basic(Cells, Cytoplasm, Nucleus):
     for key in DataFrameDict_Nucleus.keys():
         DataFrameDict_Nucleus[key] = Nucleus[:][Nucleus.ImageNumber == key].reset_index()
 
-    #takes connectet images and they identefied objects form from the Dictionary
+    #takes connected images and they identified objects form from the dictionary
     for key, value in DataFrameDict_Full_cell.items():
 
         #gets all x and y positions of cells on an image and creates an array of them
