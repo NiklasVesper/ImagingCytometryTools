@@ -12,7 +12,6 @@ The corresponding paper you find under: https://doi.org/10.1016/j.cels.2018.02.0
 
 folder_dir = r'D:\ATF6' #folder directory
 
-#generates images
 for paths, dirs, files in sd.walk(folder_dir): #goes throw all files and folders in given directory
 
     for file in os.listdir(paths): #goes throw all files in a folder
