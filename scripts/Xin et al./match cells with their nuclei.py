@@ -13,7 +13,7 @@ The "match cells with their nuclei" script links objects that were independently
 The CellProfiler pipeline can be found under:
 https://github.com/MrTheLukasBoom/ImagingCytometryTools/blob/main/Cellprofiler%20pipelines/Xin%20et%20al.%20Segmentation%20Deeplearning%20Imaging%20Mass%20Cytometry.cpproj
 
-For this CellProfiler pipeline Cellpose 2.0 is required as a plugin. 
+For this CellProfiler pipeline Cellpose 2 is required as a plugin. 
 Instructions for the plugin installation can be found under:
 https://github.com/CellProfiler/CellProfiler-plugins/tree/master
 
