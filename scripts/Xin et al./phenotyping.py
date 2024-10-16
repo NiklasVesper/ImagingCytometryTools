@@ -2,67 +2,70 @@ import pandas as pd
 import scandir as sd
 import os
 
-import pandas as pd
-import numpy as np
-import shapely.geometry
 import warnings
 import re
 
+'''
+The "phenotyping" script assigns cells their type and after that assigns each cell that could be phenotyped they neighborhood.
+The script takes files that were previously generated with the "neighborhood analysis" script.
+'''
+
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
-# gives you the neigbooring cell types
+#assigns cells their neighboring cell types
 def neigboorhood_cell_type(Cell_type, Subtype,file):
 
     Neigboorhood_fin= []
     for index, cell in file.iterrows():
 
-        if cell['Cell_types'] == Cell_type and cell['immune_type'] == Subtype:
+        if cell['Cell_types'] == Cell_type and cell['cell_type_neighborhood'] == Subtype:
 
-            Neigboorhood = re.split(r',', cell['Neigboorhood'].replace('[', '').replace(']', ''))
+            Neighborhood = re.split(r',', cell['Neighborhood'].replace('[', '').replace(']', ''))
 
-            Neigboorhood_list = []
-            for x in Neigboorhood:
+            Neighborhood_list = []
+            for x in Neighborhood:
                 try:
-                    Neigboorhood_list.append(int(float(x)))
+                    Neighborhood_list.append(int(float(x)))
                 except ValueError:
                     pass
 
-
-            Neigboorhood_cell = []
+            Neighborhood_cell = []
             for index, cell in file.iterrows():
 
-                if cell['Cell_number'] in Neigboorhood_list:
-                    Neigboorhood_cell.append(cell['Cell_types'])
+                if cell['Cell_number'] in Neighborhood_list:
+                    Neighborhood_cell.append(cell['Cell_types'])
 
-            Neigboorhood_fin.append(Neigboorhood_cell)
-            print(Neigboorhood_cell)
+            Neigboorhood_fin.append(Neighborhood_cell)
 
         else:
             Neigboorhood_fin.append('currently not of interest')
 
     return(Neigboorhood_fin)
 
-folder_dir = r'D:\ATF6'# folder directory
+folder_dir = r'D:\ATF6' #folder directory
 
 for paths, dirs, files in sd.walk(folder_dir): #goes throw all files and folders in given directory
 
     for file in os.listdir(paths): #goes throw all files in a folder
-        filedir = os.path.join(paths, file) #returns fuull file directory
+        filedir = os.path.join(paths, file) #returns full file directory
 
-        if filedir.endswith("subcell_neighborhood.csv"): # returns all files that end with txt
+        if filedir.endswith("subcell_neighborhood.csv"): #checks if the file has 'subcell_neighborhood.csv' in its name
 
-            filename = os.path.basename(file) # gives you the file name
-            filename_string = str(filename)
-            filedir_string = str(filedir)[:-len(filename)] # gives you the file directory
+            filename = os.path.basename(file) #gives you the file name
+            filename_string = str(filename) #turns the filename into a string
+            filedir_string = str(filedir)[:-len(filename)] #gives you the file directory as a string
 
             neighborhood_analysis = pd.read_csv(filedir) #opens the found directory
 
-            cell_types = [] # empty list for all cell types
+            cell_types = [] #empty list for all cell types
             for index, cell in neighborhood_analysis.iterrows():
-                cell_type = []
+                cell_type = [] #empty list for signular cell type
 
+                '''
+                The cell types are assigned based on thresholds that were determined by gating on the images.
+                '''
 
-                if cell['MeanIntensity_CD45_Nucleus'] >= 0.2:#
+                if cell['MeanIntensity_CD45_Nucleus'] >= 0.2:
                     cell_type.append('Immune cell')
                     if cell['MeanIntensity_CD3_Nucleus'] > 0.2:
                         if cell['MeanIntensity_CD4_Nucleus'] > 0.2:
@@ -82,62 +85,65 @@ for paths, dirs, files in sd.walk(folder_dir): #goes throw all files and folders
                     cell_type.append('Tissue cell')
 
                 cell_types.append(cell_type)
-            neighborhood_analysis['Cell_types'] = cell_types
+            neighborhood_analysis['Cell_types'] = cell_types #adds a new column with the cell types to the pandas data frame
 
-            immune_type = []
+            cell_type_neighborhood = []
             for index, cell in neighborhood_analysis.iterrows():
+
+                '''
+                Defines the cell type that one is interested in.
+                '''
 
                 if cell['MeanIntensity_CD45_Nucleus'] >= 0.2:
                     if cell['MeanIntensity_CD3_Nucleus'] > 0.2:
                         if cell['MeanIntensity_CD8_Nucleus'] > 1:
-                            immune_type.append('CD8 T cell')
+                            cell_type_neighborhood.append('CD8 T cell')
                         else:
-                            immune_type.append('no')
+                            cell_type_neighborhood.append('no')
                     else:
-                        immune_type.append('no')
+                        cell_type_neighborhood.append('no')
                 else:
-                    immune_type.append('no')
+                    cell_type_neighborhood.append('no')
 
-            neighborhood_analysis['immune_type'] = immune_type
+            neighborhood_analysis['cell_type_neighborhood'] = cell_type_neighborhood #adds a new column for the cell type of choice to the pandas data frame
 
-            neighborhood_analysis['CD8 neigboors'] = neigboorhood_cell_type_H(['Immune cell', 'CD8 T cell'],'CD8 T cell',neighborhood_analysis)
+            neighborhood_analysis['CD8 neigboors'] = neigboorhood_cell_type(['Immune cell', 'CD8 T cell'],'CD8 T cell',neighborhood_analysis) #assigns cell type of choice their neighboring cell types
 
-            dir = filedir_string + filename_string[:-4] + "_CD8_neighborhood" + ".csv"
+            dir = filedir_string + filename_string[:-4] + "_CD8_neighborhood" + ".csv" #create a new file name and directory
 
             print(dir)
-            neighborhood_analysis.to_csv(dir)
+            neighborhood_analysis.to_csv(dir) #exports the file
 
-            #for CD20 positive cells
-            '''
-                if cell['MeanIntensity_CD45_Nucleus'] >= 0.2:
-                    if cell['MeanIntensity_CD20_Nucleus'] > 0.3:
-                        immune_type.append('B cell')
-                    else:
-                        immune_type.append('no')
-                else:
-                    immune_type.append('no')
+#for CD20 positive cells
+'''
+    if cell['MeanIntensity_CD45_Nucleus'] >= 0.2:
+        if cell['MeanIntensity_CD20_Nucleus'] > 0.3:
+            immune_type.append('B cell')
+        else:
+            immune_type.append('no')
+    else:
+        immune_type.append('no')
 
-            neighborhood_analysis['immune_type'] = immune_type
+neighborhood_analysis['immune_type'] = immune_type
 
-            neighborhood_analysis['CD20 neigboors'] = neigboorhood_cell_type_H(['Immune cell', 'B cell'], 'B cell',neighborhood_analysis)
+neighborhood_analysis['CD20 neigboors'] = neigboorhood_cell_type_H(['Immune cell', 'B cell'], 'B cell',neighborhood_analysis)
 
-            dir = filedir_string + filename_string[:-4] + "_CD20_neighborhood" + ".csv"
-            '''
+dir = filedir_string + filename_string[:-4] + "_CD20_neighborhood" + ".csv"
+'''
 
-            # for CD11c positive cells
-            '''
-                if cell['MeanIntensity_CD45_Nucleus'] >= 0.2:
-                    if cell['MeanIntensity_CD11c_Nucleus'] > 0.3:
-                        immune_type.append('DC cell')
-                    else:
-                        immune_type.append('no')
-                else:
-                    immune_type.append('no')
+# for CD11c positive cells
+'''
+    if cell['MeanIntensity_CD45_Nucleus'] >= 0.2:
+        if cell['MeanIntensity_CD11c_Nucleus'] > 0.3:
+            immune_type.append('DC cell')
+        else:
+            immune_type.append('no')
+    else:
+        immune_type.append('no')
 
-            neighborhood_analysis['immune_type'] = immune_type
+neighborhood_analysis['immune_type'] = immune_type
 
-            neighborhood_analysis['CD11c neigboors'] = neigboorhood_cell_type_H(['Immune cell', 'DC cell'],'DC cell',neighborhood_analysis)
+neighborhood_analysis['CD11c neigboors'] = neigboorhood_cell_type_H(['Immune cell', 'DC cell'],'DC cell',neighborhood_analysis)
 
-            dir = filedir_string + filename_string[:-4] + "_CD11c_neighborhood" + ".csv"
-            '''
-            
+dir = filedir_string + filename_string[:-4] + "_CD11c_neighborhood" + ".csv"
+'''
