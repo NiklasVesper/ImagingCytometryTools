@@ -5,13 +5,18 @@ import matplotlib.pyplot as plt
 import scandir as sd
 import os
 
+'''
+The "neighborhood visualization" script generates plots to visualize the phenotypes of surrounding cells in relation to one specific cellular phenotype
+The script takes files that were previously generated with the "phenotyping" script.
+'''
 
-folder_dir = r'F:\ATF6 FAK\All\High\CD11'
+folder_dir = r'F:\ATF6 FAK\All\High\CD11' #folder directory
 
 #for multiple files
 
-for paths, dirs, files in sd.walk(folder_dir): #goes throw all files and folders in given directory
+for paths, dirs, files in sd.walk(folder_dir): #goes through all files and folders in given directory
 
+    #lists for the phenotypes
     neighborhood_Tissue_percent = []
     neighborhood_Immune_percent = []
 
@@ -22,31 +27,40 @@ for paths, dirs, files in sd.walk(folder_dir): #goes throw all files and folders
     neighborhood_CD68_percent = []
     neighborhood_DC_percent = []
 
-    for file in os.listdir(paths): #goes throw all files in a folder
-        filedir = os.path.join(paths, file) #returns fuull file directory
+    for file in os.listdir(paths): #goes through all files in a folder
+        filedir = os.path.join(paths, file) #returns full file directory
 
-        if filedir.endswith("CD11c_neighborhood.csv"):
+        if filedir.endswith("_CD8_neighborhood.csv"): #checks if the file has the proper condition in its name lists for the phenotypes
+            '''
+            Other conditions are: _CD20_neighborhood.csv / _CD11c_neighborhood.csv 
+            '''
             print(filedir)
 
-            filename = os.path.basename(file)
-            filename_string = str(filename)
-            filedir_string = str(filedir)[:-len(filename)]
+            filename = os.path.basename(file) #gives you the file name
+            filename_string = str(filename) #turns the filename into a string
+            filedir_string = str(filedir)[:-len(filename)] #gives you the file directory as a string
 
-            neighborhood_of_cells = pd.read_csv(filedir)
+            neighborhood_of_cells = pd.read_csv(filedir) #opens the found directory
 
+            for index, cell in neighborhood_of_cells.iterrows(): #loops through all cells
 
-            for index, cell in neighborhood_of_cells.iterrows():
+                if cell['Cell_types'] == "['Immune cell', 'CD8 T cell']": #checks for the cell conditions one is interested in
 
+                    '''
+                    Other conditions are: "['Immune cell', 'B cell']" / "['Immune cell', 'DC cell']" 
+                    '''
 
-                if cell['Cell_types'] == "['Immune cell', 'DC cell']":
+                    Neigboorhood = re.split(r'], ', cell['CD8 neighbors'])
 
-
-                    Neigboorhood = re.split(r'], ', cell['CD11 neigboors'])
-
+                    '''
+                    Other conditions are: 'CD20 neighbors' / 'CD11c neighbors'
+                    '''
+                    # replaces the brackets in the strings
                     Cell_list = []
                     for x in Neigboorhood:
                         Cell_list.append(x.replace('[', '').replace(']', ''))
 
+                    #lists for cell counts
                     number_of_cells = len(Cell_list)
 
                     Tissue_count = []
@@ -59,39 +73,35 @@ for paths, dirs, files in sd.walk(folder_dir): #goes throw all files and folders
                     Myeloid_count = []
                     DC_count = []
 
-                    for y in Cell_list:
+                    for c in Cell_list:
 
-                        if y == "'Tissue cell'":
+                        if c == "'Tissue cell'":
                             Tissue_count.append('1 count')
-
-                        # ----------
-
-                        if y == "'Immune cell'":
+                            
+                        if c == "'Immune cell'":
                             Immune_count.append('1 count')
 
-                        if y == "'Immune cell', 'CD4 T cell'":
+                        if c == "'Immune cell', 'CD4 T cell'":
                             Immune_count.append('1 count')
                             CD4_count.append('1 count')
 
-                        if y == "'Immune cell', 'CD8 T cell'":
+                        if c == "'Immune cell', 'CD8 T cell'":
                             Immune_count.append('1 count')
                             CD8_count.append('1 count')
 
-                        # ----------
-
-                        if y == "'Immune cell', 'B cell'":
+                        if c == "'Immune cell', 'B cell'":
                             Immune_count.append('1 count')
                             B_count.append('1 count')
 
-                        if y == "'Immune cell', 'Granulocyte'":
+                        if c == "'Immune cell', 'Granulocyte'":
                             Immune_count.append('1 count')
                             Granulocyte_count.append('1 count')
 
-                        if y == "'Immune cell', 'Myeloid cell'":
+                        if c == "'Immune cell', 'Myeloid cell'":
                             Immune_count.append('1 count')
                             Myeloid_count.append('1 count')
 
-                        if y == "'Immune cell', 'DC cell'":
+                        if c == "'Immune cell', 'DC cell'":
                             Immune_count.append('1 count')
                             DC_count.append('1 count')
 
@@ -116,7 +126,7 @@ for paths, dirs, files in sd.walk(folder_dir): #goes throw all files and folders
                     neighborhood_CD68_percent.append(Myeloid_percent)
                     neighborhood_DC_percent.append(DC_percent)
 
-            #--------
+    #--------
 
     try:
 
