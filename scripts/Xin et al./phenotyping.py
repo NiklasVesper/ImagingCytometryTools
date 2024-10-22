@@ -40,7 +40,7 @@ def neigboorhood_cell_type(Cell_type,Subtype,file):
         else:
             Neigboorhood_fin.append('currently not of interest')
 
-    return(Neigboorhood_fin) #
+    return(Neigboorhood_fin)
 
 folder_dir = r'D:\ATF6' #folder directory
 
