@@ -13,40 +13,40 @@ The script takes files that were previously generated with the "neighborhood ana
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 #assigns cells their neighboring cell types
-def neigboorhood_cell_type(Cell_type, Subtype,file):
+def neigboorhood_cell_type(Cell_type,Subtype,file):
 
-    Neigboorhood_fin= []
-    for index, cell in file.iterrows():
+    Neigboorhood_fin= [] #a list for the whole neighborhood phenotypes
+    for index, cell in file.iterrows(): #loops through all cells
 
-        if cell['Cell_types'] == Cell_type and cell['cell_type_neighborhood'] == Subtype:
+        if cell['Cell_types'] == Cell_type and cell['cell_type_neighborhood'] == Subtype: #checks through conditions of the desired cell types
 
-            Neighborhood = re.split(r',', cell['Neighborhood'].replace('[', '').replace(']', ''))
+            Neighborhood = re.split(r',', cell['Neighborhood'].replace('[', '').replace(']', '')) #splits the sting found in the neighborhood column
 
-            Neighborhood_list = []
-            for x in Neighborhood:
+            Neighborhood_list = [] #list for the neighboring cell numbers
+            for x in Neighborhood: #goes through the neighborhood of a cell
                 try:
-                    Neighborhood_list.append(int(float(x)))
-                except ValueError:
+                    Neighborhood_list.append(int(float(x))) #appends the neighboring cell numbers into a list
+                except ValueError: #goes on if there is nothing in the neighborhood
                     pass
 
-            Neighborhood_cell = []
-            for index, cell in file.iterrows():
+            Neighborhood_cell = [] #a list for single cell neighborhood phenotypes
+            for index, cell in file.iterrows(): #loops through all cells
 
-                if cell['Cell_number'] in Neighborhood_list:
-                    Neighborhood_cell.append(cell['Cell_types'])
+                if cell['Cell_number'] in Neighborhood_list: #checks if the number of a cell is in the neighborhood list
+                    Neighborhood_cell.append(cell['Cell_types']) #appends the phenotype into a new list
 
-            Neigboorhood_fin.append(Neighborhood_cell)
+            Neigboorhood_fin.append(Neighborhood_cell) #appends all surrounding phenotypes into a new list
 
         else:
             Neigboorhood_fin.append('currently not of interest')
 
-    return(Neigboorhood_fin)
+    return(Neigboorhood_fin) #
 
 folder_dir = r'D:\ATF6' #folder directory
 
-for paths, dirs, files in sd.walk(folder_dir): #goes throw all files and folders in given directory
+for paths, dirs, files in sd.walk(folder_dir): #goes through all files and folders in given directory
 
-    for file in os.listdir(paths): #goes throw all files in a folder
+    for file in os.listdir(paths): #goes through all files in a folder
         filedir = os.path.join(paths, file) #returns full file directory
 
         if filedir.endswith("subcell_neighborhood.csv"): #checks if the file has 'subcell_neighborhood.csv' in its name
@@ -107,7 +107,7 @@ for paths, dirs, files in sd.walk(folder_dir): #goes throw all files and folders
 
             neighborhood_analysis['cell_type_neighborhood'] = cell_type_neighborhood #adds a new column for the cell type of choice to the pandas data frame
 
-            neighborhood_analysis['CD8 neigboors'] = neigboorhood_cell_type(['Immune cell', 'CD8 T cell'],'CD8 T cell',neighborhood_analysis) #assigns cell type of choice their neighboring cell types
+            neighborhood_analysis['CD8 neighbors'] = neigboorhood_cell_type(['Immune cell', 'CD8 T cell'],'CD8 T cell',neighborhood_analysis) #assigns cell type of choice their neighboring cell types
 
             dir = filedir_string + filename_string[:-4] + "_CD8_neighborhood" + ".csv" #create a new file name and directory
 
@@ -126,7 +126,7 @@ for paths, dirs, files in sd.walk(folder_dir): #goes throw all files and folders
 
 neighborhood_analysis['immune_type'] = immune_type
 
-neighborhood_analysis['CD20 neigboors'] = neigboorhood_cell_type_H(['Immune cell', 'B cell'], 'B cell',neighborhood_analysis)
+neighborhood_analysis['CD20 neighbors'] = neigboorhood_cell_type_H(['Immune cell', 'B cell'], 'B cell',neighborhood_analysis)
 
 dir = filedir_string + filename_string[:-4] + "_CD20_neighborhood" + ".csv"
 '''
@@ -143,7 +143,7 @@ dir = filedir_string + filename_string[:-4] + "_CD20_neighborhood" + ".csv"
 
 neighborhood_analysis['immune_type'] = immune_type
 
-neighborhood_analysis['CD11c neigboors'] = neigboorhood_cell_type_H(['Immune cell', 'DC cell'],'DC cell',neighborhood_analysis)
+neighborhood_analysis['CD11c neighbors'] = neigboorhood_cell_type_H(['Immune cell', 'DC cell'],'DC cell',neighborhood_analysis)
 
 dir = filedir_string + filename_string[:-4] + "_CD11c_neighborhood" + ".csv"
 '''
