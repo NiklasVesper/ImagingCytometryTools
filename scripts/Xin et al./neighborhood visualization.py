@@ -10,7 +10,7 @@ The "neighborhood visualization" script generates plots to visualize the phenoty
 The script takes files that were previously generated with the "phenotyping" script.
 '''
 
-folder_dir = r'F:\ATF6 FAK\All\High\CD11' #folder directory
+folder_dir = r'F:\ATF6 FAK\All\High\CD8' #folder directory
 
 #for multiple files
 
