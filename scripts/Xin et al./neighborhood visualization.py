@@ -55,7 +55,7 @@ for paths, dirs, files in sd.walk(folder_dir): #goes through all files and folde
                     '''
                     Other conditions are: 'CD20 neighbors' / 'CD11c neighbors'
                     '''
-                    # replaces the brackets in the strings
+                    #replaces the brackets in the strings
                     Cell_list = []
                     for x in Neigboorhood:
                         Cell_list.append(x.replace('[', '').replace(']', ''))
@@ -63,8 +63,8 @@ for paths, dirs, files in sd.walk(folder_dir): #goes through all files and folde
                     #lists for cell counts
                     number_of_cells = len(Cell_list)
 
+                    #list to hold the counts of neighboring cells
                     Tissue_count = []
-
                     Immune_count = []
                     CD4_count = []
                     CD8_count = []
@@ -73,6 +73,7 @@ for paths, dirs, files in sd.walk(folder_dir): #goes through all files and folde
                     Myeloid_count = []
                     DC_count = []
 
+                    #appends counters to the phenotype lists
                     for c in Cell_list:
 
                         if c == "'Tissue cell'":
@@ -105,13 +106,9 @@ for paths, dirs, files in sd.walk(folder_dir): #goes through all files and folde
                             Immune_count.append('1 count')
                             DC_count.append('1 count')
 
-
+                    #calculates the percentages in regard to the neighboring cells
                     Tissue_percent = (len(Tissue_count) / len(Cell_list)) * 100
                     Immune_percent = (len(Immune_count) / len(Cell_list)) * 100
-
-                    neighborhood_Tissue_percent.append(Tissue_percent)
-                    neighborhood_Immune_percent.append(Immune_percent)
-
                     CD4_percent = (len(CD4_count) / len(Cell_list)) * 100
                     CD8_percent = (len(CD8_count) / len(Cell_list)) * 100
                     B_percent = (len(B_count) / len(Cell_list)) * 100
@@ -119,6 +116,9 @@ for paths, dirs, files in sd.walk(folder_dir): #goes through all files and folde
                     Myeloid_percent = (len(Myeloid_count) / len(Cell_list)) * 100
                     DC_percent = (len(DC_count) / len(Cell_list)) * 100
 
+                    #appends the percentages of neighboring cells into a list for later analysis
+                    neighborhood_Tissue_percent.append(Tissue_percent)
+                    neighborhood_Immune_percent.append(Immune_percent)
                     neighborhood_CD4_percent.append(CD4_percent)
                     neighborhood_CD8_percent.append(CD8_percent)
                     neighborhood_CD20_percent.append(B_percent)
@@ -129,35 +129,30 @@ for paths, dirs, files in sd.walk(folder_dir): #goes through all files and folde
     #--------
 
     try:
+        #basic visualization if a cell is more surrounded by other immune cells of tissue cells
 
+        #settings for the neighborhood plot
         categories = ['Tissue', 'Immune']
-
         values = [statistics.mean(neighborhood_Tissue_percent),statistics.mean(neighborhood_Immune_percent)]
-
         errors = [statistics.stdev(neighborhood_Tissue_percent),statistics.stdev(neighborhood_Immune_percent)]
-
         colors = ['gray', '#44933a']
 
-        # Create the bar plot
+        #generates the plot
         fig, ax = plt.subplots()
-
-        # Plot bars with error bars
         ax.bar(categories, values, yerr=errors, capsize=5, color=colors, edgecolor='black')
-
-        # Add labels and title
         ax.set_ylabel('Percent of Neighboring cells')
         ax.set_title('')
-
-        # ax.set_xticklabels(categories, rotation=30)
         ax.set_ylim(0, 110)
 
-        # Show the plot
+        #shows the plot and saves it
         plt.show()
-        fig.savefig(folder_dir + "/CD11c_neighborhood_vis",dpi=300)
+        fig.savefig(folder_dir + "/CD8_neighborhood_vis",dpi=300)
         plt.close()
 
-        categories = ['CD4', 'CD8', 'CD20', 'CD15', 'CD68','CD11c']
+        #visualization of the surrounding phenotypes
 
+        #settings for the neighborhood plot
+        categories = ['CD4', 'CD8', 'CD20', 'CD15', 'CD68','CD11c']
         values = [statistics.mean(neighborhood_CD4_percent),
                   statistics.mean(neighborhood_CD8_percent),
                   statistics.mean(neighborhood_CD20_percent),
@@ -165,7 +160,6 @@ for paths, dirs, files in sd.walk(folder_dir): #goes through all files and folde
                   statistics.mean(neighborhood_CD68_percent),
                   statistics.mean(neighborhood_DC_percent)
                   ]
-
         errors = [statistics.stdev(neighborhood_CD4_percent),
                   statistics.stdev(neighborhood_CD8_percent),
                   statistics.stdev(neighborhood_CD20_percent),
@@ -173,27 +167,22 @@ for paths, dirs, files in sd.walk(folder_dir): #goes through all files and folde
                   statistics.stdev(neighborhood_CD68_percent),
                   statistics.stdev(neighborhood_DC_percent),
                   ]
-
         colors = ['#E40303', '#FF8C00', '#FFED00', '#008026', '#24408E','#732982']
 
-        # Create the bar plot
+        #generates the plot
         fig, ax = plt.subplots()
-
-        # Plot bars with error bars
         ax.bar(categories, values, yerr=errors, capsize=5, color=colors, edgecolor='black')
-
-        # Add labels and title
-
         ax.set_ylabel('Percent of Neighboring cells')
         ax.set_title('')
         ax.set_ylim(0, 60)
 
+        #shows the plot and saves it
         plt.show()
-        fig.savefig(folder_dir + "/CD11c_immune_neighborhood_vis", dpi=300)
+        fig.savefig(folder_dir + "/CD8_immune_neighborhood_vis", dpi=300)
         plt.close()
 
+        #pandas data frame to export the neighborhood for further analysis
         neigboorhood_df = pd.DataFrame()
-
         neigboorhood_df['CD4'] = neighborhood_CD4_percent
         neigboorhood_df['CD8'] = neighborhood_CD8_percent
         neigboorhood_df['CD20'] = neighborhood_CD20_percent
@@ -201,9 +190,9 @@ for paths, dirs, files in sd.walk(folder_dir): #goes through all files and folde
         neigboorhood_df['CD68'] = neighborhood_CD68_percent
         neigboorhood_df['CD11c'] = neighborhood_DC_percent
 
-        neigboorhood_df.to_csv(folder_dir + "/" + "CD11c_immune_neighborhood.csv")
+        neigboorhood_df.to_csv(folder_dir + "/" + "CD8_immune_neighborhood.csv") #exports the pandas data frame
 
-
+    #handels errors and continues in case there is nothing to calculate
     except statistics.StatisticsError:
         print('------')
         print(filedir)
