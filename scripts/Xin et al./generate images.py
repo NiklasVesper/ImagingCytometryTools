@@ -10,7 +10,7 @@ Here the images were compensated with the script available at: https://github.co
 The corresponding paper you find under: https://doi.org/10.1016/j.cels.2018.02.010
 '''
 
-folder_dir = r'D:\ATF6' #folder directory
+folder_dir = r'' #folder directory
 
 for paths, dirs, files in sd.walk(folder_dir): #goes throw all files and folders in given directory
 
