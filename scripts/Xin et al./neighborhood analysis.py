@@ -65,7 +65,7 @@ def neighborhood(Cells):
     return (Cells)
 
 
-folder_dir = r'D:\ATF6'  #folder directory
+folder_dir = r''  #folder directory
 
 for paths, dirs, files in sd.walk(folder_dir):  #goes throw all files and folders in given directory
 
