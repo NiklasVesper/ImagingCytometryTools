@@ -42,7 +42,7 @@ def neigboorhood_cell_type(Cell_type,Subtype,file):
 
     return(Neigboorhood_fin)
 
-folder_dir = r'D:\ATF6' #folder directory
+folder_dir = r'' #folder directory
 
 for paths, dirs, files in sd.walk(folder_dir): #goes through all files and folders in given directory
 
