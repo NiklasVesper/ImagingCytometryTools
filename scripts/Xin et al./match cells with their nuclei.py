@@ -145,7 +145,7 @@ def cell_to_organell_basic(Cells, Cytoplasm, Nucleus):
     return (single_nuclear_cells)
 
 
-folder_dir = r'D:\ATF6'  #folder directory
+folder_dir = r''  #folder directory
 
 for paths, dirs, files in sd.walk(folder_dir): #goes throw all files and folders in given directory
 
