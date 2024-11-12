@@ -9,7 +9,17 @@ The script takes only compensated images.
 Here the images were compensated with the script available at: https://github.com/BodenmillerGroup/cyTOFcompensation/tree/master
 The corresponding paper you find under: https://doi.org/10.1016/j.cels.2018.02.010
 
-Continue now with the segmentation in CellProfiler
+Continue now with the segmentation in CellProfiler.
+
+The CellProfiler pipeline can be found under:
+https://github.com/MrTheLukasBoom/ImagingCytometryTools/blob/main/Cellprofiler%20pipelines/Xin%20et%20al.%20Segmentation%20Deeplearning%20Imaging%20Mass%20Cytometry.cpproj
+
+For this CellProfiler pipeline Cellpose 2 is required as a plugin. 
+Instructions for the plugin installation can be found under:
+https://github.com/CellProfiler/CellProfiler-plugins/tree/master
+
+CellProfiler: https://doi.org/10.1186/s12859-021-04344-9
+Cellpose 2.0: https://doi.org/10.1038/s41592-022-01663-4
 '''
 
 folder_dir = r'' #folder directory
