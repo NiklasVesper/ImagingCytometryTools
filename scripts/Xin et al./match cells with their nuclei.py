@@ -20,7 +20,7 @@ https://github.com/CellProfiler/CellProfiler-plugins/tree/master
 CellProfiler: https://doi.org/10.1186/s12859-021-04344-9
 Cellpose 2.0: https://doi.org/10.1038/s41592-022-01663-4
 
-Continue now with the "neighborhood analysis" scrip.
+Continue now with the "neighborhood analysis" script.
 '''
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
