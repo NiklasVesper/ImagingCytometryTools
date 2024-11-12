@@ -8,6 +8,8 @@ The script takes only compensated images.
 
 Here the images were compensated with the script available at: https://github.com/BodenmillerGroup/cyTOFcompensation/tree/master
 The corresponding paper you find under: https://doi.org/10.1016/j.cels.2018.02.010
+
+Continue now with the segmentation in CellProfiler
 '''
 
 folder_dir = r'' #folder directory
