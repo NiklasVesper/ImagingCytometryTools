@@ -8,6 +8,8 @@ import re
 '''
 The "phenotyping" script assigns cells their type and after that assigns each cell that could be phenotyped they neighborhood.
 The script takes files that were previously generated with the "neighborhood analysis" script.
+
+Continue now with the "neighborhood visualization" script.
 '''
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
