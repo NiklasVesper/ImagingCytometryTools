@@ -8,6 +8,8 @@ import os
 '''
 The "neighborhood visualization" script generates plots to visualize the phenotypes of surrounding cells in relation to one specific cellular phenotype
 The script takes files that were previously generated with the "phenotyping" script.
+
+Continue now with the The "neighborhood testing" script.
 '''
 
 folder_dir = r'F:\ATF6 FAK\All\High\CD8' #folder directory
