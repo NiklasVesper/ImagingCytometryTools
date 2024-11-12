@@ -64,7 +64,7 @@ for paths, dirs, files in sd.walk(folder_dir): #goes through all files and folde
                 cell_type = [] #empty list for signular cell type
 
                 '''
-                The cell types are assigned based on thresholds that were determined by gating on the images.
+                The cell types are assigned based on thresholds that were determined by gating on the images in CellProfiler.
                 '''
 
                 if cell['MeanIntensity_CD45_Nucleus'] >= 0.2:
