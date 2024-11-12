@@ -9,6 +9,8 @@ import warnings
 '''
 The "neighborhood analysis" script examines the spatial proximity of all cells within the tissue.
 The script takes files that were previously generated with the "match cells with their nuclei" script.
+
+Continue now with the "phenotyping" script
 '''
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
