@@ -12,7 +12,7 @@ The corresponding paper you find under: https://doi.org/10.1016/j.cels.2018.02.0
 Continue now with the segmentation in CellProfiler.
 
 The CellProfiler pipeline can be found under:
-https://github.com/MrTheLukasBoom/ImagingCytometryTools/blob/main/Cellprofiler%20pipelines/Xin%20et%20al.%20Segmentation%20Deeplearning%20Imaging%20Mass%20Cytometry.cpproj
+https://github.com/NiklasVesper/ImagingCytometryTools/tree/main/Cellprofiler%20pipelines
 
 For this CellProfiler pipeline Cellpose 2 is required as a plugin. 
 Instructions for the plugin installation can be found under:
