@@ -11,7 +11,7 @@ import re
 The "match cells with their nuclei" script links objects that were independently identified in a CellProfiler pipeline.
 
 The CellProfiler pipeline can be found under:
-https://github.com/MrTheLukasBoom/ImagingCytometryTools/blob/main/Cellprofiler%20pipelines/Xin%20et%20al.%20Segmentation%20Deeplearning%20Imaging%20Mass%20Cytometry.cpproj
+https://github.com/NiklasVesper/ImagingCytometryTools/tree/main/Cellprofiler%20pipelines
 
 For this CellProfiler pipeline Cellpose 2 is required as a plugin. 
 Instructions for the plugin installation can be found under:
