@@ -94,23 +94,23 @@ def cell_to_organell_basic(Cells, Cytoplasm, Nucleus):
 
         count_cell = -1  #counter
         for cell in position_cells:  #goes throw all cell positions
+            count_cell = count_cell + 1  #ticks up the counter
             cell_diameter = DataFrameDict_Full_cell[key]['AreaShape_MinFeretDiameter'].to_list()[count_cell]  #creates the smallest possible cell diameter
             cell_shape = shapely.geometry.Point(cell).buffer(cell_diameter / 2)  #creates a circle representing the cell area
-            count_cell = count_cell + 1  #ticks up the counter
-
+            
             count_cytoplasm = -1  #counter
             for cytoplasm in position_cytoplasm:  #goes throw all cytoplasm positions
-                cytoplasm_position = shapely.geometry.Point(cytoplasm)  #creates a point at the center of the cytoplasm object
                 count_cytoplasm = count_cytoplasm + 1  #ticks up the counter
-
+                cytoplasm_position = shapely.geometry.Point(cytoplasm)  #creates a point at the center of the cytoplasm object
+                
                 if cytoplasm_position.within(cell_shape) == True:  #checks if the center of the cytoplasm is within the cell
 
                     count_nucleus = -1  #counter
                     nucleus_list = []  #list for all found nuclei
                     for nucleus in position_nucleus:  #goes throw all nuclei positions
-                        nucleus_position = shapely.geometry.Point(nucleus) #creates a point at the center of the nucleus object
                         count_nucleus = count_nucleus + 1  #ticks up the counter
-
+                        nucleus_position = shapely.geometry.Point(nucleus) #creates a point at the center of the nucleus object
+                        
                         if nucleus_position.within(cell_shape) == True:  #checks if the center of the nucleus is within the cell
                             nucleus_list.append(count_nucleus) #appends the nucleus count to the list for all found nuclei
 
