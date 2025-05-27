@@ -167,7 +167,7 @@ for paths, dirs, files in sd.walk(folder_dir): #goes throw all files and folders
 
                 filedir_images_string = filedir_string + r'\subcellular localisation'  #creates a new directory
 
-                if os.path.isdir(filedir_images_string) == True:  #checks if the new directory allready exists
+                if os.path.isdir(filedir_images_string) == True:  #checks if the new directory already exists
                     pass
                 else: #creates a new directory if necessary
                     os.makedirs(filedir_images_string)
