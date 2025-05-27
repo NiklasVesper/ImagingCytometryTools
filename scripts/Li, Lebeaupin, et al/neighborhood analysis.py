@@ -76,6 +76,8 @@ for paths, dirs, files in sd.walk(folder_dir):  #goes throw all files and folder
 
         if filedir.endswith("single_cells_and_organells.csv"):  #checks if the file has 'single_cells_and_organells.csv' in its name
 
+            print(filedir)
+
             filename = os.path.basename(file) #gives you the file name
             filename_string = str(filename) #turns the filename into a string
 
