@@ -43,7 +43,7 @@ def neighborhood(Cells):
         count_cell = -1 #counter
         for cell in position_cells: #goes throw all cell positions
             cell_position = shapely.geometry.Point(cell) #creates a point at the center of the cell
-            neighborhood_radius = DataFrameDict_Full_cell['AreaShape_MaxFeretDiameter'].mean() #gives you the mean MaxFeretDiameter of all cells
+            neighborhood_radius = Cells['AreaShape_MaxFeretDiameter'].mean() #gives you the mean MaxFeretDiameter of all cells
             cell_neighborhood = shapely.geometry.Point(cell).buffer(neighborhood_radius * 1.5) #defines the radius for the spatial proximity
             count_cell = count_cell + 1 #ticks up the counter
             Cell_number.append(count_cell)
