@@ -195,20 +195,18 @@ for paths, dirs, files in sd.walk(folder_dir): #goes through all files and folde
         print('------')
         continue
 '''
-    try:
+        try:
 
-        categories = ['CD4','Foxp3','CD8', 'CD20', 'CD15', 'CD68','CD11c']
-
+        categories = ['CD4', 'Foxp3', 'CD8', 'CD20', 'CD15', 'CD68', 'CD11c']
 
         values = [
-                  statistics.mean(neighborhood_CD4_percent),
-                  #statistics.mean(neighborhood_FoxP3_percent),
-                  statistics.mean(neighborhood_CD8_percent),
-                  statistics.mean(neighborhood_CD20_percent),
-                  statistics.mean(neighborhood_CD15_percent),
-                  statistics.mean(neighborhood_CD68_percent),
-                  statistics.mean(neighborhood_DC_percent),
-                  ]
+            statistics.mean(neighborhood_CD4_percent),
+            statistics.mean(neighborhood_CD8_percent),
+            statistics.mean(neighborhood_CD20_percent),
+            statistics.mean(neighborhood_CD15_percent),
+            statistics.mean(neighborhood_CD68_percent),
+            statistics.mean(neighborhood_DC_percent),
+        ]
 
         errors = [statistics.stdev(neighborhood_CD4_percent),
                   statistics.stdev(neighborhood_CD8_percent),
@@ -218,28 +216,26 @@ for paths, dirs, files in sd.walk(folder_dir): #goes through all files and folde
                   statistics.stdev(neighborhood_DC_percent),
                   ]
 
-        colors = ['#E40303','#FF8C00', '#FFED00', '#008026', '#24408E','#732982']
+        colors = ['#E40303', '#FF8C00', '#FFED00', '#008026', '#24408E', '#732982']
 
         values_norm = [i * (100 / sum(values)) for i in values]
 
         # Plot bars with error bars
-        plt.figure(figsize=(3,6))
+        plt.figure(figsize=(3, 6))
         plt.bar(categories[5], values_norm[::-1][0], capsize=5, color=colors[::-1][0], edgecolor='black')
-        plt.bar(categories[5], values_norm[::-1][1], bottom = values_norm[::-1][0], capsize=5, color=colors[::-1][1], edgecolor='black')
-        plt.bar(categories[5], values_norm[::-1][2], bottom = values_norm[::-1][0] + values_norm[::-1][1], capsize=5, color=colors[::-1][2], edgecolor='black')
-        plt.bar(categories[5], values_norm[::-1][3], bottom = values_norm[::-1][0] + values_norm[::-1][1] + values_norm[::-1][2], capsize=5, color=colors[::-1][3], edgecolor='black')
-        plt.bar(categories[5], values_norm[::-1][4], bottom = values_norm[::-1][0] + values_norm[::-1][1] + values_norm[::-1][2] + values_norm[::-1][3], capsize=5, color=colors[::-1][4], edgecolor='black')
-        plt.bar(categories[5], values_norm[::-1][5], bottom = values_norm[::-1][0] + values_norm[::-1][1] + values_norm[::-1][2] + values_norm[::-1][3] + values_norm[::-1][4], capsize=5, color=colors[::-1][5], edgecolor='black')
-        plt.bar(categories[5], values_norm[::-1][6], bottom=values_norm[::-1][0] + values_norm[::-1][1] + values_norm[::-1][2] + values_norm[::-1][3] + values_norm[::-1][4] + values_norm[::-1][5], capsize=5, color=colors[::-1][6], edgecolor='black')
+        plt.bar(categories[5], values_norm[::-1][1], bottom=values_norm[::-1][0], capsize=5, color=colors[::-1][1], edgecolor='black')
+        plt.bar(categories[5], values_norm[::-1][2], bottom=values_norm[::-1][0] + values_norm[::-1][1], capsize=5, color=colors[::-1][2], edgecolor='black')
+        plt.bar(categories[5], values_norm[::-1][3], bottom=values_norm[::-1][0] + values_norm[::-1][1] + values_norm[::-1][2], capsize=5, color=colors[::-1][3], edgecolor='black')
+        plt.bar(categories[5], values_norm[::-1][4], bottom=values_norm[::-1][0] + values_norm[::-1][1] + values_norm[::-1][2] + values_norm[::-1][3], capsize=5, color=colors[::-1][4], edgecolor='black')
+        plt.bar(categories[5], values_norm[::-1][5], bottom=values_norm[::-1][0] + values_norm[::-1][1] + values_norm[::-1][2] + values_norm[::-1][3] + values_norm[::-1][4], capsize=5, color=colors[::-1][5], edgecolor='black')
 
-        plt.savefig(folder_dir + "/Tumor_FAK_low_600dpi.png", dpi=600)
+        plt.savefig(folder_dir + "/example_name.png", dpi=600)
         plt.close()
 
         neigboorhood_df = pd.DataFrame()
 
         neigboorhood_df['CD4'] = neighborhood_CD4_percent
         neigboorhood_df['CD8'] = neighborhood_CD8_percent
-        #neigboorhood_df['FoxP3'] = neighborhood_FoxP3_percent
         neigboorhood_df['CD20'] = neighborhood_CD20_percent
         neigboorhood_df['CD15'] = neighborhood_CD15_percent
         neigboorhood_df['CD68'] = neighborhood_CD68_percent
