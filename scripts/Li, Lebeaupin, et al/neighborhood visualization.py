@@ -35,9 +35,7 @@ for paths, dirs, files in sd.walk(folder_dir): #goes through all files and folde
         filedir = os.path.join(paths, file) #returns full file directory
 
         if filedir.endswith("_CD8_neighborhood.csv"): #checks if the file has the proper condition in its name lists for the phenotypes
-            '''
-            Other conditions are: _CD20_neighborhood.csv / _CD11c_neighborhood.csv 
-            '''
+
             print(filedir)
 
             filename = os.path.basename(file) #gives you the file name
@@ -50,15 +48,8 @@ for paths, dirs, files in sd.walk(folder_dir): #goes through all files and folde
 
                 if cell['Cell_types'] == "['Immune cell', 'CD8 T cell']": #checks for the cell conditions one is interested in
 
-                    '''
-                    Other conditions are: "['Immune cell', 'B cell']" / "['Immune cell', 'DC cell']" 
-                    '''
-
                     Neigboorhood = re.split(r'], ', cell['CD8 neighbors'])
 
-                    '''
-                    Other conditions are: 'CD20 neighbors' / 'CD11c neighbors'
-                    '''
                     #replaces the brackets in the strings
                     Cell_list = []
                     for x in Neigboorhood:
