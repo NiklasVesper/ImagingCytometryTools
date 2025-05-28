@@ -12,7 +12,7 @@ The script takes files that were previously generated with the "phenotyping" scr
 Continue now with the The "neighborhood testing" script.
 '''
 
-folder_dir = r'F:\ATF6 FAK\All\High\CD8' #folder directory
+folder_dir = r'' #folder directory
 
 #for multiple files
 
