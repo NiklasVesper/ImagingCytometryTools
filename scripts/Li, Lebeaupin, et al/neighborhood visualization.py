@@ -243,7 +243,7 @@ for paths, dirs, files in sd.walk(folder_dir): #goes through all files and folde
         neigboorhood_df['CD68'] = neighborhood_CD68_percent
         neigboorhood_df['CD11c'] = neighborhood_DC_percent
 
-        neigboorhood_df.to_csv(folder_dir + "/" + "Tumor_FAK_low_immune_neighborhood.csv")
+        neigboorhood_df.to_csv(folder_dir + "/" + "example_name.csv")
 
     except statistics.StatisticsError:
         print('------')
