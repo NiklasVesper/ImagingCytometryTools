@@ -9,6 +9,8 @@ import os
 The "neighborhood visualization" script generates plots to visualize the phenotypes of surrounding cells in relation to one specific cellular phenotype
 The script takes files that were previously generated with the "phenotyping" script.
 
+If you want to merge multiple files together you need to put them into the same folder!
+
 Continue now with the The "neighborhood testing" script.
 '''
 
