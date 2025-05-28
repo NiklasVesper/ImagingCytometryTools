@@ -17,7 +17,7 @@ Continue now with the The "neighborhood testing" script.
 folder_dir = r'' #folder directory
 
 #for multiple files
-
+#Example for neighborhood analysis of CD8 T cells. Any other cell lineage or subset can be analyzed the same way.
 for paths, dirs, files in sd.walk(folder_dir): #goes through all files and folders in given directory
 
     #lists for the phenotypes
