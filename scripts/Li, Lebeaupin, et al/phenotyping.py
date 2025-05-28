@@ -46,6 +46,7 @@ def neigboorhood_cell_type(Cell_type,Subtype,file):
 
 folder_dir = r'' #folder directory
 
+#Example for neighborhood analysis of CD8 T cells. Any other cell lineage or subset can be analyzed the same way.
 for paths, dirs, files in sd.walk(folder_dir): #goes through all files and folders in given directory
 
     for file in os.listdir(paths): #goes through all files in a folder
@@ -115,37 +116,3 @@ for paths, dirs, files in sd.walk(folder_dir): #goes through all files and folde
 
             print(dir)
             neighborhood_analysis.to_csv(dir) #exports the file
-
-#for CD20 positive cells
-'''
-    if cell['MeanIntensity_CD45_Nucleus'] >= 0.2:
-        if cell['MeanIntensity_CD20_Nucleus'] > 0.3:
-            immune_type.append('B cell')
-        else:
-            immune_type.append('no')
-    else:
-        immune_type.append('no')
-
-neighborhood_analysis['immune_type'] = immune_type
-
-neighborhood_analysis['CD20 neighbors'] = neigboorhood_cell_type_H(['Immune cell', 'B cell'], 'B cell',neighborhood_analysis)
-
-dir = filedir_string + filename_string[:-4] + "_CD20_neighborhood" + ".csv"
-'''
-
-# for CD11c positive cells
-'''
-    if cell['MeanIntensity_CD45_Nucleus'] >= 0.2:
-        if cell['MeanIntensity_CD11c_Nucleus'] > 0.3:
-            immune_type.append('DC cell')
-        else:
-            immune_type.append('no')
-    else:
-        immune_type.append('no')
-
-neighborhood_analysis['immune_type'] = immune_type
-
-neighborhood_analysis['CD11c neighbors'] = neigboorhood_cell_type_H(['Immune cell', 'DC cell'],'DC cell',neighborhood_analysis)
-
-dir = filedir_string + filename_string[:-4] + "_CD11c_neighborhood" + ".csv"
-'''
