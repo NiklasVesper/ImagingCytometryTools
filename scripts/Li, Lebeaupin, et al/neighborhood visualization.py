@@ -194,6 +194,8 @@ for paths, dirs, files in sd.walk(folder_dir): #goes through all files and folde
         print('This file hase nothing to calculate')
         print('------')
         continue
+
+#different visualization where only the neighboring immune cells are shown and normalized to 100 percent 
 '''
         try:
 
