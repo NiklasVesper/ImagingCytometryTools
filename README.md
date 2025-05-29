@@ -1,3 +1,6 @@
+ImagingCytometryTools
+
+
 ImagingCytometryTools is a collection of scripts for the analysis of multiplex tissue imaging data,
 with a focus on Imaging Mass Cytometry, but it can be adapted for any other imaging method.
 
