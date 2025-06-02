@@ -1,11 +1,10 @@
-<h3 align="center">ImagingCytometryTools</h3>
+<h3 align="left">ImagingCytometryTools</h3>
 
 The key problem of multiplex tissue imaging data analysis is the segmentation of cells.
 Generalist segmentation algorithms like Cellpose and Deepcell significantly improved on that,
 but these algorithms only allow cellular and/or nuclear segmentation that are independent from each other.
 
-ImagingCytometryTools is a collection of scripts ,
-with a focus on Imaging Mass Cytometry, 
+ImagingCytometryTools is a collection of scripts that allows the user to generate subcellular information out of the cellular segmentation. The with a focus on Imaging Mass Cytometry, 
 but it can be adapted for any other imaging method.
 
 The foundation the analysis is a CellProfiler pipeline with Cellpose as a plugin: 
