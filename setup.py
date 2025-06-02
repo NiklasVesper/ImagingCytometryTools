@@ -9,7 +9,6 @@ setup(
     version="1.0.0",
     description="Analysis of complex imaging data",
     long_description=long_description,
-    long_description_content_type="text/markdown",
     url="https://github.com/NiklasVesper/ImagingCytometryTools",
     author="Niklas Vesper",
     author_email="niklas.vesper@uniklinik-freiburg.de",
