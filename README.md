@@ -8,6 +8,8 @@ ImagingCytometryTools is a collection of scripts that allows the user to generat
 
 The foundation the analysis is a <a href="https://github.com/CellProfiler/CellProfiler-plugins/tree/master"><strong>CellProfiler pipeline with Cellpose as a plugin.</strong></a>
 
+If you use this pipeline or its associated package please cite:
+
 An ImagingCytometryTools Python package with more functionalities and an improved version of the associated analysis Cellprofiler pipeline are under active development.
 
 If you are interested in using this pipeline or want to help or contribute to its development you can contact me under:
