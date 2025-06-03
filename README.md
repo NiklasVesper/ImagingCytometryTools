@@ -8,7 +8,7 @@ The foundation the analysis is a CellProfiler pipeline with <a href="https://git
 
 If you use this pipeline or its associated package please cite:
 
-To use the preliminary package run:
+To use the preliminary package install git and run:
 
     pip install git+https://github.com/NiklasVesper/ImagingCytometryTools.git
 
