@@ -13,5 +13,5 @@ To use the preliminary package install git and run:
 
 An ImagingCytometryTools python package with more functionalities and an improved version of the associated analysis CellProfiler pipeline are under active development and soon to be released.
 
-If you are interested in using this pipeline or want to help or contribute to its development you can contact me under:
+If you are interested in using this pipeline or want to help or contribute to its development you can contact me under:<br />
 niklas.vesper@uniklinik-freiburg.de
