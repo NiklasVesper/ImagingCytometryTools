@@ -10,6 +10,10 @@ The foundation the analysis is a <a href="https://github.com/CellProfiler/CellPr
 
 If you use this pipeline or its associated package please cite:
 
+To use the preliminary package run:
+
+    pip install git+https://github.com/NiklasVesper/ImagingCytometryTools.git
+
 An ImagingCytometryTools python package with more functionalities and an improved version of the associated analysis Cellprofiler pipeline are under active development.
 
 If you are interested in using this pipeline or want to help or contribute to its development you can contact me under:
