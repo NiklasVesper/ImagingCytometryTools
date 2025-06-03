@@ -6,6 +6,7 @@ A key problem of multiplex tissue imaging data analysis is the segmentation of c
 The foundation the analysis is a CellProfiler pipeline with <a href="https://github.com/CellProfiler/CellProfiler-plugins/tree/master"><strong>Cellpose as a plugin.</strong></a>
 
 If you use this pipeline or its associated package please cite:
+Li, Lebeaupin, et al.
 
 To use the preliminary package install git and run:
 
