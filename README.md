@@ -8,11 +8,11 @@ The foundation the analysis is a CellProfiler pipeline with <a href="https://git
 If you use this pipeline or its associated package please cite:
 Li, Lebeaupin, et al.
 
-To use the preliminary package install git and run:
+An ImagingCytometryTools python package with more functionalities and an improved version of the associated CellProfiler pipeline are under active development and soon to be released.
+
+To use a preliminary package install git and run:
 
     pip install git+https://github.com/NiklasVesper/ImagingCytometryTools.git
-
-An ImagingCytometryTools python package with more functionalities and an improved version of the associated analysis CellProfiler pipeline are under active development and soon to be released.
 
 If you are interested in using this pipeline or want to help or contribute to its development you can contact me under:<br />
 niklas.vesper@uniklinik-freiburg.de
