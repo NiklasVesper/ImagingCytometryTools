@@ -15,8 +15,6 @@ Li, Lebeaupin, et al.
 An ImagingCytometryTools python package with more functionalities and an improved version of the associated CellProfiler pipeline are under active development 
 and soon to be released.
 
-https://git-scm.com/downloads
-
 To use a preliminary package install <a href="https://git-scm.com/downloads"><strong>git</a> and run:
 
     pip install git+https://github.com/NiklasVesper/ImagingCytometryTools.git
