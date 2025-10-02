@@ -23,3 +23,5 @@ If you are interested in using this pipeline or want to help or contribute to it
 niklas.vesper@uniklinik-freiburg.de
 
 ## Visual explanation of the algorithm 
+
+![](https://github.com/NiklasVesper/ImagingCytometryTools/blob/main/Images/algorithm.png)
