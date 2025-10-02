@@ -21,3 +21,5 @@ To use a preliminary package install <a href="https://git-scm.com/downloads"><st
 
 If you are interested in using this pipeline or want to help or contribute to its development you can contact me under:<br />
 niklas.vesper@uniklinik-freiburg.de
+
+## Visual explanation of the algorithm 
