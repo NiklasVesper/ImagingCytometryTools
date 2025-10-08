@@ -2,9 +2,9 @@
 ## ImagingCytometryTools
 
 A key problem of high throughput multiplex tissue imaging data analysis is the segmentation of cells. Generalist segmentation algorithms like Cellpose and Deepcell significantly 
-improved on that, but these algorithms only allow cellular and/or nuclear segmentation that are independent of each other (1,2). 
+improved on that, but these algorithms only allow cellular and/or nuclear segmentation that are independent of each other (1, 2). 
 
-ImagingCytometryTools is a collection of scripts that allows the user to generate subcellular information out of a Cellpose segmentation in conjunction with a CellProfiler pipeline via a novel algorithm (3). The primary advantage of this approach is an improved characterization of transcription factor translocation or the localization of oncogenes. The pipeline has a focus on imaging mass cytometry, but it can be adapted for any other imaging method.
+ImagingCytometryTools is a collection of scripts that allows the user to generate subcellular information out of a Cellpose segmentation in conjunction with a CellProfiler pipeline via a novel algorithm (3, 4). The primary advantage of this approach is an improved characterization of transcription factor translocation or the localization of oncogenes. The pipeline has a focus on imaging mass cytometry, but it can be adapted for any other imaging method.
 
 The foundation of the analysis is a <a href="https://github.com/CellProfiler/CellProfiler-plugins/tree/master"><strong>CellProfiler pipeline with Cellpose as a 
 plugin</strong></a>.
@@ -32,3 +32,5 @@ niklas.vesper@uniklinik-freiburg.de
 (2) Greenwald, N. F., Miller, G., Moen, E., Kong, A., Kagel, A., Dougherty, T., ... & Van Valen, D. (2022). Whole-cell segmentation of tissue images with human-level performance using large-scale data annotation and deep learning. Nature biotechnology, 40(4), 555-565.
 
 (3) Stirling, D. R., Swain-Bowden, M. J., Lucas, A. M., Carpenter, A. E., Cimini, B. A., & Goodman, A. (2021). CellProfiler 4: improvements in speed, utility and usability. BMC bioinformatics, 22(1), 433.
+
+(4) Li, Lebeaupin, et al.
