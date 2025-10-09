@@ -1,5 +1,5 @@
 <!-- ImagingCytometryTools -->
-## ImagingCytometryTools
+## ImagingCytometryTools (1.0.0-beta)
 
 A key problem of high throughput multiplex tissue imaging data analysis is the segmentation of cells. Generalist segmentation algorithms like Cellpose and Deepcell significantly 
 improved on that, but these algorithms only allow cellular and/or nuclear segmentation that are independent of each other (1, 2). 
