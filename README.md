@@ -34,3 +34,5 @@ niklas.vesper@uniklinik-freiburg.de
 (3) Stirling, D. R., Swain-Bowden, M. J., Lucas, A. M., Carpenter, A. E., Cimini, B. A., & Goodman, A. (2021). CellProfiler 4: improvements in speed, utility and usability. BMC bioinformatics, 22(1), 433.
 
 (4) Li, Lebeaupin, et al.
+
+## Release history
