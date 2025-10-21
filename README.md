@@ -4,12 +4,12 @@
 A key problem of high throughput multiplex tissue imaging data analysis is the segmentation of cells. Generalist segmentation algorithms like Cellpose and Deepcell significantly 
 improved on that, but these algorithms only allow cellular and/or nuclear segmentation that are independent of each other (1, 2). 
 
-ImagingCytometryTools is a collection of scripts that allows the user to generate subcellular information out of a Cellpose segmentation in conjunction with a CellProfiler pipeline via a novel algorithm (3, 4). The primary advantage of this approach is an improved characterization of transcription factor translocation or the localization of oncogenes. The pipeline has a focus on imaging mass cytometry, but it can be adapted for any other imaging method.
+ImagingCytometryTools is a collection of scripts that allows the user to generate subcellular information out of a Cellpose segmentation in conjunction with a CellProfiler pipeline via a novel algorithm (3, 4). The primary advantage of this approach is an improved characterization of transcription factor translocation or the localization of oncogenes. The pipeline has a focus on imaging mass cytometry, but it can easily be used for any other imaging method.
 
 The foundation of the analysis is a <a href="https://github.com/CellProfiler/CellProfiler-plugins/tree/master"><strong>CellProfiler pipeline with Cellpose as a 
 plugin</strong></a>.
 
-**If you use this pipeline or its associated package please cite:** Li, Lebeaupin, et al.
+**If you use this pipeline or its associated package please cite:** <a href="https://github.com/CellProfiler/CellProfiler-plugins/tree/master"><strong>Li, Lebeaupin, et al. (Nature 2025)</strong></a>
 
 An ImagingCytometryTools python package with more functionalities and an improved version of the associated CellProfiler pipeline are under active development 
 and soon to be released.
