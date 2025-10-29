@@ -2,7 +2,7 @@ if __name__ == "__main__":
   
 # Pre-processing-----------------------------------------------------------------------------------------------------------
     folder_directory_with_spill_mat = r'C:\Users\vesper\Desktop\Spillovermatrix_IMC_2.txt'
-    folder_directory_with_data = r'D:\ATF6\Round 1'
+    folder_directory_with_data = r'D:\ATF6\Round 1' #Careful if the spillover matrix and data is in the same directory, you will get an error message!
 
     # Compensation---------------------------------------------------------------------------------------------------------
     from ImagingCytometryTools.run_compensation_IMC import run_compensation_IMC
@@ -10,7 +10,7 @@ if __name__ == "__main__":
 
     run_compensation_IMC(folder_directory_with_data,
                          folder_directory_with_spill_mat,
-                         use_GPU=True)
+                         use_GPU=False)
 
 
     # Image and folder generation------------------------------------------------------------------------------------------
