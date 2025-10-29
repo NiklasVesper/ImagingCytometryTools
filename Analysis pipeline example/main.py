@@ -2,7 +2,7 @@ if __name__ == "__main__":
   
 # Pre-processing-----------------------------------------------------------------------------------------------------------
     folder_directory_with_spill_mat = r'C:\Users\vesper\Desktop\Spillovermatrix_IMC_2.txt'
-    folder_directory_with_data = r'D:\ATF6 FAK 2_0\Round 1'
+    folder_directory_with_data = r'D:\ATF6\Round 1'
 
     # Compensation---------------------------------------------------------------------------------------------------------
     from ImagingCytometryTools.run_compensation_IMC import run_compensation_IMC
