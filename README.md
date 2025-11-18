@@ -37,5 +37,5 @@ niklas.vesper@uniklinik-freiburg.de
 
 ## Release history
 
-1.0.1: Added image compensation, image generation and helper functions to set up the CellProfiler pipeline.
+1.0.1: Added image compensation, image generation and helper functions to set up the CellProfiler pipeline.<br />
 1.0.2: Updated generation of neighborhood and subcellular data as wella test functions  
