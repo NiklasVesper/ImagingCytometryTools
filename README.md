@@ -18,7 +18,7 @@ To use a preliminary package install <a href="https://git-scm.com/downloads"><st
 
     pip install git+https://github.com/NiklasVesper/ImagingCytometryTools.git
 
-If you are interested in using this pipeline, have any questions or want to help or contribute to its development you can contact me under:<br />
+If you are interested in using this pipeline, have any questions or want to help or contribute to its development you can contact me under:
 niklas.vesper@uniklinik-freiburg.de
 
 ## Visual explanation of the algorithm to generate subcellular information 
