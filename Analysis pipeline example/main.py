@@ -16,7 +16,7 @@ if __name__ == "__main__":
     # Image and folder generation------------------------------------------------------------------------------------------
     from ImagingCytometryTools.generate_images_from_IMC_data import generate_images_from_IMC_data
     from ImagingCytometryTools.generate_folders_for_CellProfiler import generate_folders_for_CellProfiler
-
+    from ImagingCytometryTools.split_images_for_CellProfiler import split_images_for_CellProfiler
 
     generate_images_from_IMC_data(folder_directory_with_data, 
                                   generate_ome_tiff=False,
@@ -24,6 +24,9 @@ if __name__ == "__main__":
     
     generate_folders_for_CellProfiler(folder_directory_with_data,
                                       generate_folders_per_mcd_file=True)
+
+    split_images_for_CellProfiler(folder_directory_with_data,
+                                  crop_count=4)
 
 # Segmentation and general image processing--------------------------------------------------------------------------------
 
