@@ -47,14 +47,14 @@ if __name__ == "__main__":
     from ImagingCytometryTools.run_generate_neighborhood import run_generate_neighborhood
     from ImagingCytometryTools.run_test_outline_identification_and_matching import run_test_outline_identification_and_matching
 
-    for distance in [5,15]:
-        file_neighborhood = r'RunCellpose_C'
-        output_folder_neighborhood = r'full cell neighborhood ' + str(distance)
-        run_generate_neighborhood(folder_directory_with_data,
-                                  file_neighborhood,
-                                  output_folder_neighborhood,
-                                  add_cellular_information_and_outline=True,
-                                  use_own_neighborhood_radius=[True, distance])
+    
+    file_neighborhood = r'RunCellpose_C'
+    output_folder_neighborhood = r'full cell neighborhood ' + str(distance)
+    run_generate_neighborhood(folder_directory_with_data,
+                              file_neighborhood,
+                              output_folder_neighborhood,
+                              add_cellular_information_and_outline=True,
+                              use_own_neighborhood_radius=[True, 5])
     
     file_test = r'full_cell_neighborhood_5'
     output_folder_neighborhood_analysis_test = r'neighborhood test outline'
@@ -84,14 +84,14 @@ if __name__ == "__main__":
                                           mode='basic',
                                           nucleus_count=1)
     
-    for distance in [5,15]:
-        file_neighborhood_subcell = r'subcellular_information'
-        output_folder_neighborhood_subcell = r'subcellular and neighborhood ' + str(distance)
-        run_generate_neighborhood(folder_directory_with_data,
-                                  file_neighborhood_subcell,
-                                  output_folder_neighborhood_subcell,
-                                  add_cellular_information_and_outline=False,
-                                  use_own_neighborhood_radius=[True, distance])
+    
+    file_neighborhood_subcell = r'subcellular_information'
+    output_folder_neighborhood_subcell = r'subcellular and neighborhood ' + str(distance)
+    run_generate_neighborhood(folder_directory_with_data,
+                              file_neighborhood_subcell,
+                              output_folder_neighborhood_subcell,
+                              add_cellular_information_and_outline=False,
+                              use_own_neighborhood_radius=[True, 5])
     
     file_test = r'subcellular_and_neigboorhood_5'
     output_folder_subcellular_localisation_analysis_test = r'subcellular test outline'
@@ -108,3 +108,15 @@ if __name__ == "__main__":
                                                  output_folder_subcellular_localisation_analysis_test_nucleus,
                                                  show_individual_cells=True,
                                                  show_nucleus=True)
+
+    # Phenotyping----------------------------------------------------------------------------------------------------------
+    from ImagingCytometryTools.run_assign_cell_types_and_states import run_assign_cell_types_and_states
+    from ImagingCytometryTools.run_generate_image_galleries import run_generate_image_galleries
+
+    
+    file_phenotypes = r'full_cell_neighborhood_5'
+    output_folder_phenotypes = r'full cell phenotypes and neighborhood 5'
+    run_assign_cell_types_and_states(folder_dir_data,
+                                     file_phenotypes,
+                                     output_folder_phenotypes,
+                                     overwrite_existing_files=True)
