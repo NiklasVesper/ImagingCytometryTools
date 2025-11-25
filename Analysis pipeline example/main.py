@@ -120,3 +120,25 @@ if __name__ == "__main__":
                                      file_phenotypes,
                                      output_folder_phenotypes,
                                      overwrite_existing_files=True)
+
+    file_phenotypes = r'full_cell_phenotypes_and_neighborhood_5'
+    analysis = r'cell_types_and_states'
+    output_folder_images = r'image gallery CD8+ ATF6 full image'
+    max_pixel_images = ['Eu151Di','Pt194Di'] #'Dy162Di','Pt194Di'
+    proteins = ['ATF6','Nucleus_HH3'] #'CD8','Nucleus_HH3'
+    contrast_multipliers = [1750,3000] #2000,3000
+    run_generate_image_galleries(folder_dir_data,
+                                 file_phenotypes,
+                                 analysis,
+                                 output_folder_images,
+                                 max_pixel_images,
+                                 proteins,
+                                 normalisation_value='mean',
+                                 contrast_multiplier=contrast_multipliers,
+                                 select_cell_type_and_state=[True,['CD8+',['ATF6+'],[]]],
+                                 add_mixed_cells=True,
+                                 generate_crops=False,
+                                 crop_size=40,
+                                 show_neighborhood_radius=True,
+                                 select_neighboring_cell_type_and_state=[False,['CD20+',[],[]]],
+                                 show_neighboring_cells=False)
