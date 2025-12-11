@@ -20,40 +20,13 @@ Here, one can select between calculating the overall abundance or cell category 
 In addition to that, the overall cellular state can be accessed, with or without specific neighboring cells.
 '''
 
-def compare_the_same_phenotypes_and_neighbors_in_different_tissue(directory, filestring, df_column, output_folder, phenotypes, percent_of='all', add_mixed_cells=False, analyse_neighboring_cells=False, percent_of_neigborhood='all', surrounding_phenotypes = [], select_neighboring_cell_type_and_state=[False, ['', [], []]], analyse_states=False, compare_means=[False], split_by='file', statistics='mannwhitneyu', select_area=False, colors=['#D01515','#142EFB']):
+def compare_the_same_phenotypes_and_neighbors_in_different_tissue(directory, filestring, df_column, output_folder, phenotypes, analyse_phenotypes=True, percent_of='all', add_mixed_cells=False, analyse_neighboring_cells=False, percent_of_neigborhood='all', surrounding_phenotypes = [], select_neighboring_cell_type_and_state=[False, ['', [], []]], analyse_states=False, compare_means=[False], split_by='file', statistics='mannwhitneyu', select_area=False, colors=['#D01515','#142EFB']):
 
     if statistics == 'wilcoxon':
-
         from assign_phenotypes_and_metadata import sample_parings
 
-    file_counter = 0
-    for paths, dirs, files in sd.walk(directory):
-
-        for file in os.listdir(paths):
-            filedir = os.path.join(paths, file)
-
-            if filedir.endswith(".csv"):
-
-                filename = os.path.basename(file)
-                filename_string = str(filename)
-
-                if filestring in filename_string and file_counter == 0:
-
-                    file_counter = file_counter + 1
-
-                    Cells = pd.read_csv(filedir)
-
-                    Cells = Cells[Cells.columns.drop(list(Cells.filter(regex='pixel_positive_area_')))]
-
-                    cell_type_state_and_neighbor_meta_data_1 = Cells.iloc[0:0]
-                    cell_type_state_and_neighbor_meta_data_2 = Cells.iloc[0:0]
-
-                    cell_type_state_and_neighbor_meta_data_1['Meta_data_category'] = ''
-                    cell_type_state_and_neighbor_meta_data_2['Meta_data_category'] = ''
-
-                elif file_counter > 0:
-                    continue
-
+    counter_1 = 0
+    counter_2 = 0
     for paths, dirs, files in sd.walk(directory):
 
         for file in os.listdir(paths):
@@ -75,106 +48,1106 @@ def compare_the_same_phenotypes_and_neighbors_in_different_tissue(directory, fil
                     print('Processing: ' + filedir)
 
                     Cells = pd.read_csv(filedir)
-
                     Cells = Cells[Cells.columns.drop(list(Cells.filter(regex='pixel_positive_area_')))]
+                    Cells = Cells.assign(Meta_data_category=1)
 
-                    for index, cell in Cells.iterrows():
+                    if counter_1 == 0:
+                        cell_type_state_and_neighbor_meta_data_1 = Cells
 
-                        cell_dictionary = cell.to_dict()
-                        cell_dictionary['Meta_data_category'] = 1
-                        cell_type_state_and_neighbor_meta_data_1.loc[len(cell_type_state_and_neighbor_meta_data_1)] = cell_dictionary
+                    else:
+                        cell_type_state_and_neighbor_meta_data_1 = pd.concat([cell_type_state_and_neighbor_meta_data_1, Cells], ignore_index=True)
+
+                    counter_1 = counter_1 + 1
 
                 if filestring in filename_string and filename_string in meta_data_list_2:
 
                     print('Processing: ' + filedir)
 
                     Cells = pd.read_csv(filedir)
-
                     Cells = Cells[Cells.columns.drop(list(Cells.filter(regex='pixel_positive_area_')))]
+                    Cells = Cells.assign(Meta_data_category=2)
 
-                    for index, cell in Cells.iterrows():
+                    if counter_2 == 0:
+                        cell_type_state_and_neighbor_meta_data_2 = Cells
 
-                        cell_dictionary = cell.to_dict()
-                        cell_dictionary['Meta_data_category'] = 2
-                        cell_type_state_and_neighbor_meta_data_2.loc[len(cell_type_state_and_neighbor_meta_data_2)] = cell_dictionary
+                    else:
+                        cell_type_state_and_neighbor_meta_data_2 = pd.concat([cell_type_state_and_neighbor_meta_data_2, Cells], ignore_index=True)
 
-    analysis_values_phenotyping = ['Percent_of_all_per_image',
-                                   'Percent_of_immune_per_image',
-                                   'Percent_of_tissue_per_image',
-                                   'FileName',
-                                   'FileName_Image',
-                                   'MetaData']
+                    counter_2 = counter_2 + 1
 
-    lineage_data = [lineage[0] for lineage in phenotypes]
-    phenotype_data = [lineage[0] + ' pos ' + str(lineage[1]) + ' neg ' + str(lineage[2]) for lineage in phenotypes]
+#---------------------------------------------------------------------------------------------------------------------------------
 
-    for x in range(0, len(phenotypes)):
-        analysis_values_phenotyping.append(lineage_data[x])
-        analysis_values_phenotyping.append(phenotype_data[x])
+    if analyse_phenotypes == True:
 
-    analysis_df_phenotypes = pd.DataFrame(columns=analysis_values_phenotyping)
+        #------------------------------------- creates the dataframe for the final analysis -------------------------------------
 
-    if analyse_neighboring_cells == True:
-
-        analysis_values_neigborhood = ['FileName',
+        analysis_values_phenotyping = ['Percent_of_all_per_image',
+                                       'Percent_of_immune_per_image',
+                                       'Percent_of_tissue_per_image',
+                                       'FileName',
                                        'FileName_Image',
                                        'MetaData']
 
+        if select_area == True:
+            analysis_values_phenotyping.append('In_area')
+            
+        lineage_data = [lineage[0] for lineage in phenotypes]
         phenotype_data = [lineage[0] + ' pos ' + str(lineage[1]) + ' neg ' + str(lineage[2]) for lineage in phenotypes]
-        neighboring_phenotype_data = [lineage[0] + ' pos ' + str(lineage[1]) + ' neg ' + str(lineage[2]) for lineage in surrounding_phenotypes]
 
         for x in range(0, len(phenotypes)):
-            analysis_values_neigborhood.append('surrounding_cells_per_image_counter ' + str(phenotype_data[x]))
-            analysis_values_neigborhood.append('surrounding_immune_cells_per_image_counter ' + str(phenotype_data[x]))
-            analysis_values_neigborhood.append('surrounding_tissue_cells_per_image_counter ' + str(phenotype_data[x]))
-            for k in range(0, len(surrounding_phenotypes)):
-                analysis_values_neigborhood.append(str(phenotype_data[x]) + ' neighbors: ' + str(neighboring_phenotype_data[k]))
+            analysis_values_phenotyping.append(lineage_data[x])
+            analysis_values_phenotyping.append(phenotype_data[x])
 
-        analysis_df_neigborhood = pd.DataFrame(columns=analysis_values_neigborhood)
-        
-    UniqueFileName = cell_type_state_and_neighbor_meta_data_1.ImageName.unique()
-    DataFrameDict_file = {elem: pd.DataFrame() for elem in UniqueFileName}
+        analysis_df_phenotypes = pd.DataFrame(columns=analysis_values_phenotyping)
 
-    for key in DataFrameDict_file.keys():
-        DataFrameDict_file[key] = cell_type_state_and_neighbor_meta_data_1[:][cell_type_state_and_neighbor_meta_data_1.ImageName == key].reset_index()
+        if analyse_neighboring_cells == True:
 
-    for file in UniqueFileName:
+            analysis_values_neigborhood = ['FileName',
+                                           'FileName_Image',
+                                           'MetaData']
 
-        Cells_in_file = pd.DataFrame(DataFrameDict_file[file])
+            if select_area == True:
+                analysis_values_phenotyping.append('In_area')
 
-        UniqueImage = Cells_in_file.ImageNumber.unique()
-        DataFrameDict_image = {elem: pd.DataFrame() for elem in UniqueImage}
+            phenotype_data = [lineage[0] + ' pos ' + str(lineage[1]) + ' neg ' + str(lineage[2]) for lineage in phenotypes]
+            neighboring_phenotype_data = [lineage[0] + ' pos ' + str(lineage[1]) + ' neg ' + str(lineage[2]) for lineage in surrounding_phenotypes]
 
-        for key in DataFrameDict_image.keys():
-            DataFrameDict_image[key] = Cells_in_file[:][Cells_in_file.ImageNumber == key].reset_index()
+            for x in range(0, len(phenotypes)):
+                analysis_values_neigborhood.append('surrounding_cells_per_image_counter ' + str(phenotype_data[x]))
+                analysis_values_neigborhood.append('surrounding_immune_cells_per_image_counter ' + str(phenotype_data[x]))
+                analysis_values_neigborhood.append('surrounding_tissue_cells_per_image_counter ' + str(phenotype_data[x]))
+                for k in range(0, len(surrounding_phenotypes)):
+                    analysis_values_neigborhood.append(str(phenotype_data[x]) + ' neighbors: ' + str(neighboring_phenotype_data[k]))
 
-        for image in UniqueImage:
+            analysis_df_neigborhood = pd.DataFrame(columns=analysis_values_neigborhood)
 
-            analysis_row = []
-            analysis_row_neighborhood = []
-            phenotype_counter = -1
-            for phenotype in phenotypes:
-                phenotype_counter = phenotype_counter + 1
+        # ------------------------------------- Analysis of metadata 1 dataframe -------------------------------------
 
-                if phenotype_counter == 0:
-                    Percent_of_all_per_image_counter = 0
-                    Percent_of_immune_per_image_counter = 0
-                    Percent_of_tissue_per_image_counter = 0
+        UniqueFileName = cell_type_state_and_neighbor_meta_data_1.ImageName.unique()
+        DataFrameDict_file = {elem: pd.DataFrame() for elem in UniqueFileName}
 
-                percent_of_lineage_per_image_counter = 0
-                phenotype_per_image_counter_counter = 0
+        for key in DataFrameDict_file.keys():
+            DataFrameDict_file[key] = cell_type_state_and_neighbor_meta_data_1[:][cell_type_state_and_neighbor_meta_data_1.ImageName == key].reset_index()
 
-                Cells_in_image = pd.DataFrame(DataFrameDict_image[image])
+        for file in UniqueFileName:
 
-                surrounding_immune_per_image_counter = 0
-                surrounding_tissue_per_image_counter = 0
-                surrounding_phenotype_counter_list = [0 for x in range(0, len(surrounding_phenotypes))]
+            Cells_in_file = pd.DataFrame(DataFrameDict_file[file])
 
-                for index, cell in Cells_in_image.iterrows():
+            UniqueImage = Cells_in_file.ImageNumber.unique()
+            DataFrameDict_image = {elem: pd.DataFrame() for elem in UniqueImage}
+
+            for key in DataFrameDict_image.keys():
+                DataFrameDict_image[key] = Cells_in_file[:][Cells_in_file.ImageNumber == key].reset_index()
+
+            for image in UniqueImage:
+
+                if select_area == False:
+                    analysis_row = []
+                    analysis_row_neighborhood = []
+
+                if select_area == True:
+                    analysis_row_in = []
+                    analysis_row_neighborhood_in = []
+                    analysis_row_out = []
+                    analysis_row_neighborhood_out = []
+
+                phenotype_counter = -1
+                for phenotype in phenotypes:
+                    phenotype_counter = phenotype_counter + 1
+
+                    if phenotype_counter == 0 and select_area == False:
+                        Percent_of_all_per_image_counter = 0
+                        Percent_of_immune_per_image_counter = 0
+                        Percent_of_tissue_per_image_counter = 0
+                        
+                    if select_area == False:
+                        percent_of_lineage_per_image_counter = 0
+                        phenotype_per_image_counter_counter = 0
+
+                    if phenotype_counter == 0 and select_area == True:
+
+                        Percent_of_all_per_image_counter_in = 0
+                        Percent_of_immune_per_image_counter_in = 0
+                        Percent_of_tissue_per_image_counter_in = 0
+
+                        Percent_of_all_per_image_counter_out = 0
+                        Percent_of_immune_per_image_counter_out = 0
+                        Percent_of_tissue_per_image_counter_out = 0
+
+                    if select_area == True:
+                        percent_of_lineage_per_image_counter_in = 0
+                        phenotype_per_image_counter_counter_in = 0
+
+                        percent_of_lineage_per_image_counter_out = 0
+                        phenotype_per_image_counter_counter_out = 0
+
+                    Cells_in_image = pd.DataFrame(DataFrameDict_image[image])
+
+                    if select_area == False:
+                        surrounding_immune_per_image_counter = 0
+                        surrounding_tissue_per_image_counter = 0
+                        surrounding_phenotype_counter_list = [0 for x in range(0, len(surrounding_phenotypes))]
+
+                    if select_area == True:
+                        surrounding_immune_per_image_counter_in = 0
+                        surrounding_tissue_per_image_counter_in = 0
+                        surrounding_phenotype_counter_list_in = [0 for x in range(0, len(surrounding_phenotypes))]
+
+                        surrounding_immune_per_image_counter_out = 0
+                        surrounding_tissue_per_image_counter_out = 0
+                        surrounding_phenotype_counter_list_out = [0 for x in range(0, len(surrounding_phenotypes))]
+
+                    for index, cell in Cells_in_image.iterrows():
+
+                        cell_types_and_states = ast.literal_eval(cell[df_column])
+
+                        if select_area == True:
+
+                            if cell['Selected Areas'] == 'in the area':
+
+                                if add_mixed_cells == True:
+
+                                    if len(cell_types_and_states) >= 2 and cell_types_and_states[-1][0] == 'CD45+':
+                                        Percent_of_immune_per_image_counter_in = Percent_of_immune_per_image_counter_in + (len(cell_types_and_states) - 1)
+
+                                    if len(cell_types_and_states) >= 2 and cell_types_and_states[-1][0] == 'CD45-':
+                                        Percent_of_tissue_per_image_counter_in = Percent_of_tissue_per_image_counter_in + (len(cell_types_and_states) - 1)
+
+                                    for type_and_state in cell_types_and_states:
+
+                                        if type_and_state[0] == phenotype[0]:
+                                            percent_of_lineage_per_image_counter_in = percent_of_lineage_per_image_counter_in + 1
+
+                                        if type_and_state[0] == phenotype[0] and set(phenotype[1]).issubset(set(type_and_state[1:])) is True and set(phenotype[2]).isdisjoint(set(type_and_state[1:])) is True:
+
+                                            phenotype_per_image_counter_counter_in = phenotype_per_image_counter_counter_in + 1
+
+                                            if select_neighboring_cell_type_and_state[0] == False and analyse_neighboring_cells == True:
+
+                                                for neighboring_cell in ast.literal_eval(cell['Neighborhood']):
+
+                                                    neighboring_cell_types_and_states = ast.literal_eval(Cells_in_image.iloc[neighboring_cell][df_column])
+
+                                                    if len(neighboring_cell_types_and_states) >= 2 and neighboring_cell_types_and_states[-1][0] == 'CD45+':
+                                                        surrounding_immune_per_image_counter_in = surrounding_immune_per_image_counter_in + (len(neighboring_cell_types_and_states) - 1)
+
+                                                    if len(neighboring_cell_types_and_states) >= 2 and neighboring_cell_types_and_states[-1][0] == 'CD45-':
+                                                        surrounding_tissue_per_image_counter_in = surrounding_tissue_per_image_counter_in + (len(neighboring_cell_types_and_states) - 1)
+
+                                                    surrounding_phenotype_counter_in = -1
+                                                    for surrounding_phenotype in surrounding_phenotypes:
+
+                                                        surrounding_phenotype_counter_in = surrounding_phenotype_counter_in + 1
+
+                                                        for neighboring_type_and_state in neighboring_cell_types_and_states:
+
+                                                            if neighboring_type_and_state[0] == surrounding_phenotype[0] and set(surrounding_phenotype[1]).issubset(set(neighboring_type_and_state[1:])) is True and set(surrounding_phenotype[2]).isdisjoint(set(neighboring_type_and_state[1:])) is True:
+                                                                surrounding_phenotype_counter_list_in[surrounding_phenotype_counter_in] = surrounding_phenotype_counter_list_in[surrounding_phenotype_counter_in] + 1
+
+                                            if select_neighboring_cell_type_and_state[0] == True:
+
+                                                neighborhood_counter_in = 0
+                                                for neighboring_cell in ast.literal_eval(cell['Neighborhood']):
+
+                                                    neighboring_cell_types_and_states = ast.literal_eval(Cells_in_image.iloc[neighboring_cell][df_column])
+
+                                                    for neighboring_type_and_state in neighboring_cell_types_and_states:
+
+                                                        if neighboring_type_and_state[0] == select_neighboring_cell_type_and_state[1][0] and set(select_neighboring_cell_type_and_state[1][1]).issubset(set(neighboring_type_and_state[1:])) is True and set(select_neighboring_cell_type_and_state[1][2]).isdisjoint(set(neighboring_type_and_state[1:])) is True:
+                                                            neighborhood_counter_in = neighborhood_counter_in + 1
+
+                                                if neighborhood_counter_in == 0:
+                                                    phenotype_per_image_counter_counter_in = phenotype_per_image_counter_counter_in - 1
+
+                                                if neighborhood_counter_in > 0:
+
+                                                    for neighboring_cell in ast.literal_eval(cell['Neighborhood']):
+
+                                                        neighboring_cell_types_and_states = ast.literal_eval(Cells_in_image.iloc[neighboring_cell][df_column])
+
+                                                        if len(neighboring_cell_types_and_states) >= 2 and neighboring_cell_types_and_states[-1][0] == 'CD45+':
+                                                            surrounding_immune_per_image_counter_in = surrounding_immune_per_image_counter_in + (len(neighboring_cell_types_and_states) - 1)
+
+                                                        if len(neighboring_cell_types_and_states) >= 2 and neighboring_cell_types_and_states[-1][0] == 'CD45-':
+                                                            surrounding_tissue_per_image_counter_in = surrounding_tissue_per_image_counter_in + (len(neighboring_cell_types_and_states) - 1)
+
+                                                        surrounding_phenotype_counter_in = -1
+                                                        for surrounding_phenotype in surrounding_phenotypes:
+
+                                                            surrounding_phenotype_counter_in = surrounding_phenotype_counter_in + 1
+
+                                                            for neighboring_type_and_state in neighboring_cell_types_and_states:
+
+                                                                if neighboring_type_and_state[0] == surrounding_phenotype[0] and set(surrounding_phenotype[1]).issubset(set(neighboring_type_and_state[1:])) is True and set(surrounding_phenotype[2]).isdisjoint(set(neighboring_type_and_state[1:])) is True:
+                                                                    surrounding_phenotype_counter_list_in[surrounding_phenotype_counter_in] = surrounding_phenotype_counter_list_in[surrounding_phenotype_counter_in] + 1
+
+                                if add_mixed_cells == False:
+
+                                    if len(cell_types_and_states) == 2 and cell_types_and_states[-1][0] == 'CD45+':
+                                        Percent_of_immune_per_image_counter_in = Percent_of_immune_per_image_counter_in + 1
+
+                                    if len(cell_types_and_states) == 2 and cell_types_and_states[-1][0] == 'CD45-':
+                                        Percent_of_tissue_per_image_counter_in = Percent_of_tissue_per_image_counter_in + 1
+
+                                    if len(cell_types_and_states) == 2:
+
+                                        if cell_types_and_states[0][0] == phenotype[0]:
+                                            percent_of_lineage_per_image_counter_in = percent_of_lineage_per_image_counter_in + 1
+
+                                        if cell_types_and_states[0][0] == phenotype[0] and set(phenotype[1]).issubset(set(cell_types_and_states[0][1:])) is True and set(phenotype[2]).isdisjoint(set(cell_types_and_states[0][1:])) is True:
+
+                                            phenotype_per_image_counter_counter_in = phenotype_per_image_counter_counter_in + 1
+
+                                            if select_neighboring_cell_type_and_state[0] == False and analyse_neighboring_cells == True:
+
+                                                if len(neighboring_cell_types_and_states) == 2 and neighboring_cell_types_and_states[-1][0] == 'CD45+':
+                                                    surrounding_immune_per_image_counter_in = surrounding_immune_per_image_counter_in + (len(neighboring_cell_types_and_states) - 1)
+
+                                                if len(neighboring_cell_types_and_states) == 2 and neighboring_cell_types_and_states[-1][0] == 'CD45-':
+                                                    surrounding_tissue_per_image_counter_in = surrounding_tissue_per_image_counter_in + (len(neighboring_cell_types_and_states) - 1)
+
+                                                for neighboring_cell in ast.literal_eval(cell['Neighborhood']):
+
+                                                    neighboring_cell_types_and_states = ast.literal_eval(Cells_in_image.iloc[neighboring_cell][df_column])
+
+                                                    surrounding_phenotype_counter_in = -1
+                                                    for surrounding_phenotype in surrounding_phenotypes:
+
+                                                        surrounding_phenotype_counter_in = surrounding_phenotype_counter_in + 1
+
+                                                        if len(neighboring_cell_types_and_states) == 2:
+
+                                                            if neighboring_cell_types_and_states[0][0] == surrounding_phenotype[0] and set(surrounding_phenotype[1]).issubset(set(neighboring_cell_types_and_states[0][1:])) is True and set(surrounding_phenotype[2]).isdisjoint(set(neighboring_cell_types_and_states[0][1:])) is True:
+                                                                surrounding_phenotype_counter_list_in[surrounding_phenotype_counter_in] = surrounding_phenotype_counter_list_in[surrounding_phenotype_counter_in] + 1
+
+                                            if select_neighboring_cell_type_and_state[0] == True:
+
+                                                neighborhood_counter_in = 0
+                                                for neighboring_cell in ast.literal_eval(cell['Neighborhood']):
+
+                                                    neighboring_cell_types_and_states = ast.literal_eval(Cells_in_image.iloc[neighboring_cell][df_column])
+
+                                                    if len(neighboring_cell_types_and_states) == 2:
+
+                                                        if neighboring_cell_types_and_states[0][0] == select_neighboring_cell_type_and_state[1][0] and set(select_neighboring_cell_type_and_state[1][1]).issubset(set(neighboring_cell_types_and_states[0][1:])) is True and set(select_neighboring_cell_type_and_state[1][2]).isdisjoint(set(neighboring_cell_types_and_states[0][1:])) is True:
+                                                            neighborhood_counter_in = neighborhood_counter_in + 1
+
+                                                if neighborhood_counter_in == 0:
+                                                    phenotype_per_image_counter_counter_in = phenotype_per_image_counter_counter_in - 1
+
+                                                if neighborhood_counter_in > 0:
+
+                                                    if len(neighboring_cell_types_and_states) == 2 and neighboring_cell_types_and_states[-1][0] == 'CD45+':
+                                                        surrounding_immune_per_image_counter_in = surrounding_immune_per_image_counter_in + (len(neighboring_cell_types_and_states) - 1)
+
+                                                    if len(neighboring_cell_types_and_states) == 2 and neighboring_cell_types_and_states[-1][0] == 'CD45-':
+                                                        surrounding_tissue_per_image_counter_in = surrounding_tissue_per_image_counter_in + (len(neighboring_cell_types_and_states) - 1)
+
+                                                    for neighboring_cell in ast.literal_eval(cell['Neighborhood']):
+
+                                                        neighboring_cell_types_and_states = ast.literal_eval(Cells_in_image.iloc[neighboring_cell][df_column])
+
+                                                        surrounding_phenotype_counter_in = -1
+                                                        for surrounding_phenotype in surrounding_phenotypes:
+
+                                                            surrounding_phenotype_counter_in = surrounding_phenotype_counter_in + 1
+
+                                                            if len(neighboring_cell_types_and_states) == 2:
+
+                                                                if neighboring_cell_types_and_states[0][0] == surrounding_phenotype[0] and set(surrounding_phenotype[1]).issubset(set(neighboring_cell_types_and_states[0][1:])) is True and set(surrounding_phenotype[2]).isdisjoint(set(neighboring_cell_types_and_states[0][1:])) is True:
+                                                                    surrounding_phenotype_counter_list_in[surrounding_phenotype_counter_in] = surrounding_phenotype_counter_list_in[surrounding_phenotype_counter_in] + 1
+
+                            if cell['Selected Areas'] == 'outside the area':
+
+                                if add_mixed_cells == True:
+
+                                    if len(cell_types_and_states) >= 2 and cell_types_and_states[-1][0] == 'CD45+':
+                                        Percent_of_immune_per_image_counter_out = Percent_of_immune_per_image_counter_out + (len(cell_types_and_states) - 1)
+
+                                    if len(cell_types_and_states) >= 2 and cell_types_and_states[-1][0] == 'CD45-':
+                                        Percent_of_tissue_per_image_counter_out = Percent_of_tissue_per_image_counter_out + (len(cell_types_and_states) - 1)
+
+                                    for type_and_state in cell_types_and_states:
+
+                                        if type_and_state[0] == phenotype[0]:
+                                            percent_of_lineage_per_image_counter_out = percent_of_lineage_per_image_counter_out + 1
+
+                                        if type_and_state[0] == phenotype[0] and set(phenotype[1]).issubset(set(type_and_state[1:])) is True and set(phenotype[2]).isdisjoint(set(type_and_state[1:])) is True:
+
+                                            phenotype_per_image_counter_counter_out = phenotype_per_image_counter_counter_out + 1
+
+                                            if select_neighboring_cell_type_and_state[0] == False and analyse_neighboring_cells == True:
+
+                                                for neighboring_cell in ast.literal_eval(cell['Neighborhood']):
+
+                                                    neighboring_cell_types_and_states = ast.literal_eval(Cells_in_image.iloc[neighboring_cell][df_column])
+
+                                                    if len(neighboring_cell_types_and_states) >= 2 and neighboring_cell_types_and_states[-1][0] == 'CD45+':
+                                                        surrounding_immune_per_image_counter_out = surrounding_immune_per_image_counter_out + (len(neighboring_cell_types_and_states) - 1)
+
+                                                    if len(neighboring_cell_types_and_states) >= 2 and neighboring_cell_types_and_states[-1][0] == 'CD45-':
+                                                        surrounding_tissue_per_image_counter_out = surrounding_tissue_per_image_counter_out + (len(neighboring_cell_types_and_states) - 1)
+
+                                                    surrounding_phenotype_counter_out = -1
+                                                    for surrounding_phenotype in surrounding_phenotypes:
+
+                                                        surrounding_phenotype_counter_out = surrounding_phenotype_counter_out + 1
+
+                                                        for neighboring_type_and_state in neighboring_cell_types_and_states:
+
+                                                            if neighboring_type_and_state[0] == surrounding_phenotype[0] and set(surrounding_phenotype[1]).issubset(set(neighboring_type_and_state[1:])) is True and set(surrounding_phenotype[2]).isdisjoint(set(neighboring_type_and_state[1:])) is True:
+                                                                surrounding_phenotype_counter_list_out[surrounding_phenotype_counter_out] = surrounding_phenotype_counter_list_out[surrounding_phenotype_counter_out] + 1
+
+                                            if select_neighboring_cell_type_and_state[0] == True:
+
+                                                neighborhood_counter_out = 0
+                                                for neighboring_cell in ast.literal_eval(cell['Neighborhood']):
+
+                                                    neighboring_cell_types_and_states = ast.literal_eval(Cells_in_image.iloc[neighboring_cell][df_column])
+
+                                                    for neighboring_type_and_state in neighboring_cell_types_and_states:
+
+                                                        if neighboring_type_and_state[0] == select_neighboring_cell_type_and_state[1][0] and set(select_neighboring_cell_type_and_state[1][1]).issubset(set(neighboring_type_and_state[1:])) is True and set(select_neighboring_cell_type_and_state[1][2]).isdisjoint(set(neighboring_type_and_state[1:])) is True:
+                                                            neighborhood_counter_out = neighborhood_counter_out + 1
+
+                                                if neighborhood_counter_out == 0:
+                                                    phenotype_per_image_counter_counter_out = phenotype_per_image_counter_counter_out - 1
+
+                                                if neighborhood_counter_out > 0:
+
+                                                    for neighboring_cell in ast.literal_eval(cell['Neighborhood']):
+
+                                                        neighboring_cell_types_and_states = ast.literal_eval(Cells_in_image.iloc[neighboring_cell][df_column])
+
+                                                        if len(neighboring_cell_types_and_states) >= 2 and neighboring_cell_types_and_states[-1][0] == 'CD45+':
+                                                            surrounding_immune_per_image_counter_out = surrounding_immune_per_image_counter_out + (len(neighboring_cell_types_and_states) - 1)
+
+                                                        if len(neighboring_cell_types_and_states) >= 2 and neighboring_cell_types_and_states[-1][0] == 'CD45-':
+                                                            surrounding_tissue_per_image_counter_out = surrounding_tissue_per_image_counter_out + (len(neighboring_cell_types_and_states) - 1)
+
+                                                        surrounding_phenotype_counter_out = -1
+                                                        for surrounding_phenotype in surrounding_phenotypes:
+
+                                                            surrounding_phenotype_counter_out = surrounding_phenotype_counter_out + 1
+
+                                                            for neighboring_type_and_state in neighboring_cell_types_and_states:
+
+                                                                if neighboring_type_and_state[0] == surrounding_phenotype[0] and set(surrounding_phenotype[1]).issubset(set(neighboring_type_and_state[1:])) is True and set(surrounding_phenotype[2]).isdisjoint(set(neighboring_type_and_state[1:])) is True:
+                                                                    surrounding_phenotype_counter_list_out[surrounding_phenotype_counter_out] = surrounding_phenotype_counter_list_out[surrounding_phenotype_counter_out] + 1
+
+                                if add_mixed_cells == False:
+
+                                    if len(cell_types_and_states) == 2 and cell_types_and_states[-1][0] == 'CD45+':
+                                        Percent_of_immune_per_image_counter_out = Percent_of_immune_per_image_counter_out + 1
+
+                                    if len(cell_types_and_states) == 2 and cell_types_and_states[-1][0] == 'CD45-':
+                                        Percent_of_tissue_per_image_counter_out = Percent_of_tissue_per_image_counter_out + 1
+
+                                    if len(cell_types_and_states) == 2:
+
+                                        if cell_types_and_states[0][0] == phenotype[0]:
+                                            percent_of_lineage_per_image_counter_out = percent_of_lineage_per_image_counter_out + 1
+
+                                        if cell_types_and_states[0][0] == phenotype[0] and set(phenotype[1]).issubset(set(cell_types_and_states[0][1:])) is True and set(phenotype[2]).isdisjoint(set(cell_types_and_states[0][1:])) is True:
+
+                                            phenotype_per_image_counter_counter_out = phenotype_per_image_counter_counter_out + 1
+
+                                            if select_neighboring_cell_type_and_state[0] == False and analyse_neighboring_cells == True:
+
+                                                if len(neighboring_cell_types_and_states) == 2 and neighboring_cell_types_and_states[-1][0] == 'CD45+':
+                                                    surrounding_immune_per_image_counter_out = surrounding_immune_per_image_counter_out + (len(neighboring_cell_types_and_states) - 1)
+
+                                                if len(neighboring_cell_types_and_states) == 2 and neighboring_cell_types_and_states[-1][0] == 'CD45-':
+                                                    surrounding_tissue_per_image_counter_out = surrounding_tissue_per_image_counter_out + (len(neighboring_cell_types_and_states) - 1)
+
+                                                for neighboring_cell in ast.literal_eval(cell['Neighborhood']):
+
+                                                    neighboring_cell_types_and_states = ast.literal_eval(Cells_in_image.iloc[neighboring_cell][df_column])
+
+                                                    surrounding_phenotype_counter_out = -1
+                                                    for surrounding_phenotype in surrounding_phenotypes:
+
+                                                        surrounding_phenotype_counter_out = surrounding_phenotype_counter_out + 1
+
+                                                        if len(neighboring_cell_types_and_states) == 2:
+
+                                                            if neighboring_cell_types_and_states[0][0] == surrounding_phenotype[0] and set(surrounding_phenotype[1]).issubset(set(neighboring_cell_types_and_states[0][1:])) is True and set(surrounding_phenotype[2]).isdisjoint(set(neighboring_cell_types_and_states[0][1:])) is True:
+                                                                surrounding_phenotype_counter_list_out[surrounding_phenotype_counter_out] = surrounding_phenotype_counter_list_out[surrounding_phenotype_counter_out] + 1
+
+                                            if select_neighboring_cell_type_and_state[0] == True:
+
+                                                neighborhood_counter_out = 0
+                                                for neighboring_cell in ast.literal_eval(cell['Neighborhood']):
+
+                                                    neighboring_cell_types_and_states = ast.literal_eval(Cells_in_image.iloc[neighboring_cell][df_column])
+
+                                                    if len(neighboring_cell_types_and_states) == 2:
+
+                                                        if neighboring_cell_types_and_states[0][0] == select_neighboring_cell_type_and_state[1][0] and set(select_neighboring_cell_type_and_state[1][1]).issubset(set(neighboring_cell_types_and_states[0][1:])) is True and set(select_neighboring_cell_type_and_state[1][2]).isdisjoint(set(neighboring_cell_types_and_states[0][1:])) is True:
+                                                            neighborhood_counter_out = neighborhood_counter_out + 1
+
+                                                if neighborhood_counter_out == 0:
+                                                    phenotype_per_image_counter_counter_out = phenotype_per_image_counter_counter_out - 1
+
+                                                if neighborhood_counter_out > 0:
+
+                                                    if len(neighboring_cell_types_and_states) == 2 and neighboring_cell_types_and_states[-1][0] == 'CD45+':
+                                                        surrounding_immune_per_image_counter_out = surrounding_immune_per_image_counter_out + (len(neighboring_cell_types_and_states) - 1)
+
+                                                    if len(neighboring_cell_types_and_states) == 2 and neighboring_cell_types_and_states[-1][0] == 'CD45-':
+                                                        surrounding_tissue_per_image_counter_out = surrounding_tissue_per_image_counter_out + (len(neighboring_cell_types_and_states) - 1)
+
+                                                    for neighboring_cell in ast.literal_eval(cell['Neighborhood']):
+
+                                                        neighboring_cell_types_and_states = ast.literal_eval(Cells_in_image.iloc[neighboring_cell][df_column])
+
+                                                        surrounding_phenotype_counter_out = -1
+                                                        for surrounding_phenotype in surrounding_phenotypes:
+
+                                                            surrounding_phenotype_counter_out = surrounding_phenotype_counter_out + 1
+
+                                                            if len(neighboring_cell_types_and_states) == 2:
+
+                                                                if neighboring_cell_types_and_states[0][0] == surrounding_phenotype[0] and set(surrounding_phenotype[1]).issubset(set(neighboring_cell_types_and_states[0][1:])) is True and set(surrounding_phenotype[2]).isdisjoint(set(neighboring_cell_types_and_states[0][1:])) is True:
+                                                                    surrounding_phenotype_counter_list_out[surrounding_phenotype_counter_out] = surrounding_phenotype_counter_list_out[surrounding_phenotype_counter_out] + 1
+
+                        if select_area == False:
+
+                            if add_mixed_cells == True:
+
+                                if len(cell_types_and_states) >= 2 and cell_types_and_states[-1][0] == 'CD45+':
+                                    Percent_of_immune_per_image_counter = Percent_of_immune_per_image_counter + (len(cell_types_and_states) - 1)
+
+                                if len(cell_types_and_states) >= 2 and cell_types_and_states[-1][0] == 'CD45-':
+                                    Percent_of_tissue_per_image_counter = Percent_of_tissue_per_image_counter + (len(cell_types_and_states) - 1)
+
+                                for type_and_state in cell_types_and_states:
+
+                                    if type_and_state[0] == phenotype[0]:
+
+                                        percent_of_lineage_per_image_counter = percent_of_lineage_per_image_counter + 1
+
+                                    if type_and_state[0] == phenotype[0] and set(phenotype[1]).issubset(set(type_and_state[1:])) is True and set(phenotype[2]).isdisjoint(set(type_and_state[1:])) is True:
+
+                                        phenotype_per_image_counter_counter = phenotype_per_image_counter_counter + 1
+
+                                        if select_neighboring_cell_type_and_state[0] == False and analyse_neighboring_cells == True:
+
+                                            for neighboring_cell in ast.literal_eval(cell['Neighborhood']):
+
+                                                neighboring_cell_types_and_states = ast.literal_eval(Cells_in_image.iloc[neighboring_cell][df_column])
+
+                                                if len(neighboring_cell_types_and_states) >= 2 and neighboring_cell_types_and_states[-1][0] == 'CD45+':
+                                                    surrounding_immune_per_image_counter = surrounding_immune_per_image_counter + (len(neighboring_cell_types_and_states) - 1)
+
+                                                if len(neighboring_cell_types_and_states) >= 2 and neighboring_cell_types_and_states[-1][0] == 'CD45-':
+                                                    surrounding_tissue_per_image_counter = surrounding_tissue_per_image_counter + (len(neighboring_cell_types_and_states) - 1)
+
+                                                surrounding_phenotype_counter = -1
+                                                for surrounding_phenotype in surrounding_phenotypes:
+
+                                                    surrounding_phenotype_counter = surrounding_phenotype_counter + 1
+
+                                                    for neighboring_type_and_state in neighboring_cell_types_and_states:
+
+                                                        if neighboring_type_and_state[0] == surrounding_phenotype[0] and set(surrounding_phenotype[1]).issubset(set(neighboring_type_and_state[1:])) is True and set(surrounding_phenotype[2]).isdisjoint(set(neighboring_type_and_state[1:])) is True:
+
+                                                            surrounding_phenotype_counter_list[surrounding_phenotype_counter] = surrounding_phenotype_counter_list[surrounding_phenotype_counter] + 1
+
+                                        if select_neighboring_cell_type_and_state[0] == True:
+
+                                            neighborhood_counter = 0
+                                            for neighboring_cell in ast.literal_eval(cell['Neighborhood']):
+
+                                                neighboring_cell_types_and_states = ast.literal_eval(Cells_in_image.iloc[neighboring_cell][df_column])
+
+                                                for neighboring_type_and_state in neighboring_cell_types_and_states:
+
+                                                    if neighboring_type_and_state[0] == select_neighboring_cell_type_and_state[1][0] and set(select_neighboring_cell_type_and_state[1][1]).issubset(set(neighboring_type_and_state[1:])) is True and set(select_neighboring_cell_type_and_state[1][2]).isdisjoint(set(neighboring_type_and_state[1:])) is True:
+                                                        neighborhood_counter = neighborhood_counter + 1
+
+                                            if neighborhood_counter == 0:
+
+                                                phenotype_per_image_counter_counter = phenotype_per_image_counter_counter - 1
+
+                                            if neighborhood_counter > 0:
+
+                                                for neighboring_cell in ast.literal_eval(cell['Neighborhood']):
+
+                                                    neighboring_cell_types_and_states = ast.literal_eval(Cells_in_image.iloc[neighboring_cell][df_column])
+
+                                                    if len(neighboring_cell_types_and_states) >= 2 and neighboring_cell_types_and_states[-1][0] == 'CD45+':
+                                                        surrounding_immune_per_image_counter = surrounding_immune_per_image_counter + (len(neighboring_cell_types_and_states) - 1)
+
+                                                    if len(neighboring_cell_types_and_states) >= 2 and neighboring_cell_types_and_states[-1][0] == 'CD45-':
+                                                        surrounding_tissue_per_image_counter = surrounding_tissue_per_image_counter + (len(neighboring_cell_types_and_states) - 1)
+
+                                                    surrounding_phenotype_counter = -1
+                                                    for surrounding_phenotype in surrounding_phenotypes:
+
+                                                        surrounding_phenotype_counter = surrounding_phenotype_counter + 1
+
+                                                        for neighboring_type_and_state in neighboring_cell_types_and_states:
+
+                                                            if neighboring_type_and_state[0] == surrounding_phenotype[0] and set(surrounding_phenotype[1]).issubset(set(neighboring_type_and_state[1:])) is True and set(surrounding_phenotype[2]).isdisjoint(set(neighboring_type_and_state[1:])) is True:
+                                                                surrounding_phenotype_counter_list[surrounding_phenotype_counter] = surrounding_phenotype_counter_list[surrounding_phenotype_counter] + 1
+
+                            if add_mixed_cells == False:
+
+                                if len(cell_types_and_states) == 2 and cell_types_and_states[-1][0] == 'CD45+':
+                                    Percent_of_immune_per_image_counter = Percent_of_immune_per_image_counter + 1
+
+                                if len(cell_types_and_states) == 2 and cell_types_and_states[-1][0] == 'CD45-':
+                                    Percent_of_tissue_per_image_counter = Percent_of_tissue_per_image_counter + 1
+
+                                if len(cell_types_and_states) == 2:
+
+                                    if cell_types_and_states[0][0] == phenotype[0]:
+
+                                        percent_of_lineage_per_image_counter = percent_of_lineage_per_image_counter + 1
+
+                                    if cell_types_and_states[0][0] == phenotype[0] and set(phenotype[1]).issubset(set(cell_types_and_states[0][1:])) is True and set(phenotype[2]).isdisjoint(set(cell_types_and_states[0][1:])) is True:
+
+                                        phenotype_per_image_counter_counter = phenotype_per_image_counter_counter + 1
+
+                                        if select_neighboring_cell_type_and_state[0] == False and analyse_neighboring_cells == True:
+
+                                            if len(neighboring_cell_types_and_states) == 2 and neighboring_cell_types_and_states[-1][0] == 'CD45+':
+                                                surrounding_immune_per_image_counter = surrounding_immune_per_image_counter + (len(neighboring_cell_types_and_states) - 1)
+
+                                            if len(neighboring_cell_types_and_states) == 2 and neighboring_cell_types_and_states[-1][0] == 'CD45-':
+                                                surrounding_tissue_per_image_counter = surrounding_tissue_per_image_counter + (len(neighboring_cell_types_and_states) - 1)
+
+                                            for neighboring_cell in ast.literal_eval(cell['Neighborhood']):
+
+                                                neighboring_cell_types_and_states = ast.literal_eval(Cells_in_image.iloc[neighboring_cell][df_column])
+
+                                                surrounding_phenotype_counter = -1
+                                                for surrounding_phenotype in surrounding_phenotypes:
+
+                                                    surrounding_phenotype_counter = surrounding_phenotype_counter + 1
+
+                                                    if len(neighboring_cell_types_and_states) == 2:
+
+                                                        if neighboring_cell_types_and_states[0][0] == surrounding_phenotype[0] and set(surrounding_phenotype[1]).issubset(set(neighboring_cell_types_and_states[0][1:])) is True and set(surrounding_phenotype[2]).isdisjoint(set(neighboring_cell_types_and_states[0][1:])) is True:
+
+                                                            surrounding_phenotype_counter_list[surrounding_phenotype_counter] = surrounding_phenotype_counter_list[surrounding_phenotype_counter] + 1
+
+                                        if select_neighboring_cell_type_and_state[0] == True:
+
+                                            neighborhood_counter = 0
+                                            for neighboring_cell in ast.literal_eval(cell['Neighborhood']):
+
+                                                neighboring_cell_types_and_states = ast.literal_eval(Cells_in_image.iloc[neighboring_cell][df_column])
+
+                                                if len(neighboring_cell_types_and_states) == 2:
+
+                                                    if neighboring_cell_types_and_states[0][0] == select_neighboring_cell_type_and_state[1][0] and set(select_neighboring_cell_type_and_state[1][1]).issubset(set(neighboring_cell_types_and_states[0][1:])) is True and set(select_neighboring_cell_type_and_state[1][2]).isdisjoint(set(neighboring_cell_types_and_states[0][1:])) is True:
+                                                        neighborhood_counter = neighborhood_counter + 1
+
+                                            if neighborhood_counter == 0:
+
+                                                phenotype_per_image_counter_counter = phenotype_per_image_counter_counter - 1
+
+                                            if neighborhood_counter > 0:
+
+                                                if len(neighboring_cell_types_and_states) == 2 and neighboring_cell_types_and_states[-1][0] == 'CD45+':
+                                                    surrounding_immune_per_image_counter = surrounding_immune_per_image_counter + (len(neighboring_cell_types_and_states) - 1)
+
+                                                if len(neighboring_cell_types_and_states) == 2 and neighboring_cell_types_and_states[-1][0] == 'CD45-':
+                                                    surrounding_tissue_per_image_counter = surrounding_tissue_per_image_counter + (len(neighboring_cell_types_and_states) - 1)
+
+                                                for neighboring_cell in ast.literal_eval(cell['Neighborhood']):
+
+                                                    neighboring_cell_types_and_states = ast.literal_eval(Cells_in_image.iloc[neighboring_cell][df_column])
+
+                                                    surrounding_phenotype_counter = -1
+                                                    for surrounding_phenotype in surrounding_phenotypes:
+
+                                                        surrounding_phenotype_counter = surrounding_phenotype_counter + 1
+
+                                                        if len(neighboring_cell_types_and_states) == 2:
+
+                                                            if neighboring_cell_types_and_states[0][0] == surrounding_phenotype[0] and set(surrounding_phenotype[1]).issubset(set(neighboring_cell_types_and_states[0][1:])) is True and set(surrounding_phenotype[2]).isdisjoint(set(neighboring_cell_types_and_states[0][1:])) is True:
+                                                                surrounding_phenotype_counter_list[surrounding_phenotype_counter] = surrounding_phenotype_counter_list[surrounding_phenotype_counter] + 1
+
+                    if select_area == False:
+
+                        if phenotype_counter == 0:
+
+                            Percent_of_all_per_image_counter = Percent_of_immune_per_image_counter + Percent_of_tissue_per_image_counter
+
+                            analysis_row.append(Percent_of_all_per_image_counter)
+                            analysis_row.append(Percent_of_immune_per_image_counter)
+                            analysis_row.append(Percent_of_tissue_per_image_counter)
+                            analysis_row.append(file)
+                            analysis_row.append(file + '_' + str(image))
+                            analysis_row.append(1)
+
+                            if analyse_neighboring_cells == True:
+                                analysis_row_neighborhood.append(file)
+                                analysis_row_neighborhood.append(file + '_' + str(image))
+                                analysis_row_neighborhood.append(1)
+
+                        analysis_row.append(percent_of_lineage_per_image_counter)
+                        analysis_row.append(phenotype_per_image_counter_counter)
+
+                        if analyse_neighboring_cells == True:
+                            surrounding_cells_per_image_counter = surrounding_immune_per_image_counter + surrounding_tissue_per_image_counter
+
+                            analysis_row_neighborhood.append(surrounding_cells_per_image_counter)
+                            analysis_row_neighborhood.append(surrounding_immune_per_image_counter)
+                            analysis_row_neighborhood.append(surrounding_tissue_per_image_counter)
+
+                            for count in surrounding_phenotype_counter_list:
+                                analysis_row_neighborhood.append(count)
 
                     if select_area == True:
 
-                        if cell['Selected Areas'] == 'in the area':
+                        if phenotype_counter == 0:
+
+                            Percent_of_all_per_image_counter_in = Percent_of_immune_per_image_counter_in + Percent_of_tissue_per_image_counter_in
+                            Percent_of_all_per_image_counter_out = Percent_of_immune_per_image_counter_out + Percent_of_tissue_per_image_counter_out
+
+                            analysis_row_in.append(Percent_of_all_per_image_counter_in)
+                            analysis_row_in.append(Percent_of_immune_per_image_counter_in)
+                            analysis_row_in.append(Percent_of_tissue_per_image_counter_in)
+                            analysis_row_in.append(file)
+                            analysis_row_in.append(file + '_' + str(image))
+                            analysis_row_in.append(1)
+                            analysis_row_in.append('in')
+
+                            analysis_row_out.append(Percent_of_all_per_image_counter_out)
+                            analysis_row_out.append(Percent_of_immune_per_image_counter_out)
+                            analysis_row_out.append(Percent_of_tissue_per_image_counter_out)
+                            analysis_row_out.append(file)
+                            analysis_row_out.append(file + '_' + str(image))
+                            analysis_row_out.append(1)
+                            analysis_row_out.append('out')
+
+                            if analyse_neighboring_cells == True:
+                                analysis_row_neighborhood_in.append(file)
+                                analysis_row_neighborhood_in.append(file + '_' + str(image))
+                                analysis_row_neighborhood_in.append(1)
+                                analysis_row_neighborhood_in.append('in')
+
+                                analysis_row_neighborhood_out.append(file)
+                                analysis_row_neighborhood_out.append(file + '_' + str(image))
+                                analysis_row_neighborhood_out.append(1)
+                                analysis_row_neighborhood_out.append('out')
+
+                        analysis_row_in.append(percent_of_lineage_per_image_counter_in)
+                        analysis_row_in.append(phenotype_per_image_counter_counter_in)
+
+                        analysis_row_out.append(percent_of_lineage_per_image_counter_out)
+                        analysis_row_out.append(phenotype_per_image_counter_counter_out)
+
+                if select_area == False:
+                    analysis_df_phenotypes.loc[len(analysis_df_phenotypes)] = analysis_row
+
+                if select_area == True:
+                    analysis_df_phenotypes.loc[len(analysis_df_phenotypes)] = analysis_row_in
+                    analysis_df_phenotypes.loc[len(analysis_df_phenotypes)] = analysis_row_out
+
+                if analyse_neighboring_cells == True and select_area == False:
+                    analysis_df_neigborhood.loc[len(analysis_df_neigborhood)] = analysis_row_neighborhood
+
+                if analyse_neighboring_cells == True and select_area == True:
+                    analysis_df_neigborhood.loc[len(analysis_df_neigborhood)] = analysis_row_neighborhood_in
+                    analysis_df_neigborhood.loc[len(analysis_df_neigborhood)] = analysis_row_neighborhood_out
+
+        # ------------------------------------- Analysis of metadata 2 dataframe -------------------------------------
+
+        UniqueFileName = cell_type_state_and_neighbor_meta_data_2.ImageName.unique()
+        DataFrameDict_file = {elem: pd.DataFrame() for elem in UniqueFileName}
+
+        for key in DataFrameDict_file.keys():
+            DataFrameDict_file[key] = cell_type_state_and_neighbor_meta_data_2[:][cell_type_state_and_neighbor_meta_data_2.ImageName == key].reset_index()
+
+        for file in UniqueFileName:
+
+            Cells_in_file = pd.DataFrame(DataFrameDict_file[file])
+
+            UniqueImage = Cells_in_file.ImageNumber.unique()
+            DataFrameDict_image = {elem: pd.DataFrame() for elem in UniqueImage}
+
+            for key in DataFrameDict_image.keys():
+                DataFrameDict_image[key] = Cells_in_file[:][Cells_in_file.ImageNumber == key].reset_index()
+
+            for image in UniqueImage:
+
+                if select_area == False:
+                    analysis_row = []
+                    analysis_row_neighborhood = []
+
+                if select_area == True:
+                    analysis_row_in = []
+                    analysis_row_neighborhood_in = []
+                    analysis_row_out = []
+                    analysis_row_neighborhood_out = []
+
+                phenotype_counter = -1
+                for phenotype in phenotypes:
+                    phenotype_counter = phenotype_counter + 1
+
+                    if phenotype_counter == 0 and select_area == False:
+                        Percent_of_all_per_image_counter = 0
+                        Percent_of_immune_per_image_counter = 0
+                        Percent_of_tissue_per_image_counter = 0
+
+                    if phenotype_counter == 0 and select_area == True:
+                        Percent_of_all_per_image_counter_in = 0
+                        Percent_of_immune_per_image_counter_in = 0
+                        Percent_of_tissue_per_image_counter_in = 0
+
+                        Percent_of_all_per_image_counter_out = 0
+                        Percent_of_immune_per_image_counter_out = 0
+                        Percent_of_tissue_per_image_counter_out = 0
+
+                    if select_area == False:
+                        percent_of_lineage_per_image_counter = 0
+                        phenotype_per_image_counter_counter = 0
+
+                    if select_area == True:
+                        percent_of_lineage_per_image_counter_in = 0
+                        phenotype_per_image_counter_counter_in = 0
+
+                        percent_of_lineage_per_image_counter_out = 0
+                        phenotype_per_image_counter_counter_out = 0
+
+                    Cells_in_image = pd.DataFrame(DataFrameDict_image[image])
+
+                    if select_area == False:
+                        surrounding_immune_per_image_counter = 0
+                        surrounding_tissue_per_image_counter = 0
+                        surrounding_phenotype_counter_list = [0 for x in range(0, len(surrounding_phenotypes))]
+
+                    if select_area == True:
+                        surrounding_immune_per_image_counter_in = 0
+                        surrounding_tissue_per_image_counter_in = 0
+                        surrounding_phenotype_counter_list_in = [0 for x in range(0, len(surrounding_phenotypes))]
+
+                        surrounding_immune_per_image_counter_out = 0
+                        surrounding_tissue_per_image_counter_out = 0
+                        surrounding_phenotype_counter_list_out = [0 for x in range(0, len(surrounding_phenotypes))]
+
+                    for index, cell in Cells_in_image.iterrows():
+
+                        if select_area == True:
+
+                            if cell['Selected Areas'] == 'in the area':
+
+                                cell_types_and_states = ast.literal_eval(cell[df_column])
+
+                                if add_mixed_cells == True:
+
+                                    if len(cell_types_and_states) >= 2 and cell_types_and_states[-1][0] == 'CD45+':
+                                        Percent_of_immune_per_image_counter_in = Percent_of_immune_per_image_counter_in + (len(cell_types_and_states) - 1)
+
+                                    if len(cell_types_and_states) >= 2 and cell_types_and_states[-1][0] == 'CD45-':
+                                        Percent_of_tissue_per_image_counter_in = Percent_of_tissue_per_image_counter_in + (len(cell_types_and_states) - 1)
+
+                                    for type_and_state in cell_types_and_states:
+
+                                        if type_and_state[0] == phenotype[0]:
+                                            percent_of_lineage_per_image_counter_in = percent_of_lineage_per_image_counter_in + 1
+
+                                        if type_and_state[0] == phenotype[0] and set(phenotype[1]).issubset(set(type_and_state[1:])) is True and set(phenotype[2]).isdisjoint(set(type_and_state[1:])) is True:
+
+                                            phenotype_per_image_counter_counter_in = phenotype_per_image_counter_counter_in + 1
+
+                                            if select_neighboring_cell_type_and_state[0] == False and analyse_neighboring_cells == True:
+
+                                                for neighboring_cell in ast.literal_eval(cell['Neighborhood']):
+
+                                                    neighboring_cell_types_and_states = ast.literal_eval(Cells_in_image.iloc[neighboring_cell][df_column])
+
+                                                    if len(neighboring_cell_types_and_states) >= 2 and neighboring_cell_types_and_states[-1][0] == 'CD45+':
+                                                        surrounding_immune_per_image_counter_in = surrounding_immune_per_image_counter_in + (len(neighboring_cell_types_and_states) - 1)
+
+                                                    if len(neighboring_cell_types_and_states) >= 2 and neighboring_cell_types_and_states[-1][0] == 'CD45-':
+                                                        surrounding_tissue_per_image_counter_in = surrounding_tissue_per_image_counter_in + (len(neighboring_cell_types_and_states) - 1)
+
+                                                    surrounding_phenotype_counter_in = -1
+                                                    for surrounding_phenotype in surrounding_phenotypes:
+
+                                                        surrounding_phenotype_counter_in = surrounding_phenotype_counter_in + 1
+
+                                                        for neighboring_type_and_state in neighboring_cell_types_and_states:
+
+                                                            if neighboring_type_and_state[0] == surrounding_phenotype[0] and set(surrounding_phenotype[1]).issubset(set(neighboring_type_and_state[1:])) is True and set(surrounding_phenotype[2]).isdisjoint(set(neighboring_type_and_state[1:])) is True:
+                                                                surrounding_phenotype_counter_list_in[surrounding_phenotype_counter_in] = surrounding_phenotype_counter_list_in[surrounding_phenotype_counter_in] + 1
+
+                                            if select_neighboring_cell_type_and_state[0] == True:
+
+                                                neighborhood_counter_in = 0
+                                                for neighboring_cell in ast.literal_eval(cell['Neighborhood']):
+
+                                                    neighboring_cell_types_and_states = ast.literal_eval(Cells_in_image.iloc[neighboring_cell][df_column])
+
+                                                    for neighboring_type_and_state in neighboring_cell_types_and_states:
+
+                                                        if neighboring_type_and_state[0] == select_neighboring_cell_type_and_state[1][0] and set(select_neighboring_cell_type_and_state[1][1]).issubset(set(neighboring_type_and_state[1:])) is True and set(select_neighboring_cell_type_and_state[1][2]).isdisjoint(set(neighboring_type_and_state[1:])) is True:
+                                                            neighborhood_counter_in = neighborhood_counter_in + 1
+
+                                                if neighborhood_counter_in == 0:
+                                                    phenotype_per_image_counter_counter_in = phenotype_per_image_counter_counter_in - 1
+
+                                                if neighborhood_counter_in > 0:
+
+                                                    for neighboring_cell in ast.literal_eval(cell['Neighborhood']):
+
+                                                        neighboring_cell_types_and_states = ast.literal_eval(Cells_in_image.iloc[neighboring_cell][df_column])
+
+                                                        if len(neighboring_cell_types_and_states) >= 2 and neighboring_cell_types_and_states[-1][0] == 'CD45+':
+                                                            surrounding_immune_per_image_counter_in = surrounding_immune_per_image_counter_in + (len(neighboring_cell_types_and_states) - 1)
+
+                                                        if len(neighboring_cell_types_and_states) >= 2 and neighboring_cell_types_and_states[-1][0] == 'CD45-':
+                                                            surrounding_tissue_per_image_counter_in = surrounding_tissue_per_image_counter_in + (len(neighboring_cell_types_and_states) - 1)
+
+                                                        surrounding_phenotype_counter_in = -1
+                                                        for surrounding_phenotype in surrounding_phenotypes:
+
+                                                            surrounding_phenotype_counter_in = surrounding_phenotype_counter_in + 1
+
+                                                            for neighboring_type_and_state in neighboring_cell_types_and_states:
+
+                                                                if neighboring_type_and_state[0] == surrounding_phenotype[0] and set(surrounding_phenotype[1]).issubset(set(neighboring_type_and_state[1:])) is True and set(surrounding_phenotype[2]).isdisjoint(set(neighboring_type_and_state[1:])) is True:
+                                                                    surrounding_phenotype_counter_list_in[surrounding_phenotype_counter_in] = surrounding_phenotype_counter_list_in[surrounding_phenotype_counter_in] + 1
+
+                                if add_mixed_cells == False:
+
+                                    if len(cell_types_and_states) == 2 and cell_types_and_states[-1][0] == 'CD45+':
+                                        Percent_of_immune_per_image_counter_in = Percent_of_immune_per_image_counter_in + 1
+
+                                    if len(cell_types_and_states) == 2 and cell_types_and_states[-1][0] == 'CD45-':
+                                        Percent_of_tissue_per_image_counter_in = Percent_of_tissue_per_image_counter_in + 1
+
+                                    if len(cell_types_and_states) == 2:
+
+                                        if cell_types_and_states[0][0] == phenotype[0]:
+                                            percent_of_lineage_per_image_counter_in = percent_of_lineage_per_image_counter_in + 1
+
+                                        if cell_types_and_states[0][0] == phenotype[0] and set(phenotype[1]).issubset(set(cell_types_and_states[0][1:])) is True and set(phenotype[2]).isdisjoint(set(cell_types_and_states[0][1:])) is True:
+
+                                            phenotype_per_image_counter_counter_in = phenotype_per_image_counter_counter_in + 1
+
+                                            if select_neighboring_cell_type_and_state[0] == False and analyse_neighboring_cells == True:
+
+                                                if len(neighboring_cell_types_and_states) == 2 and neighboring_cell_types_and_states[-1][0] == 'CD45+':
+                                                    surrounding_immune_per_image_counter_in = surrounding_immune_per_image_counter_in + (len(neighboring_cell_types_and_states) - 1)
+
+                                                if len(neighboring_cell_types_and_states) == 2 and neighboring_cell_types_and_states[-1][0] == 'CD45-':
+                                                    surrounding_tissue_per_image_counter_in = surrounding_tissue_per_image_counter_in + (len(neighboring_cell_types_and_states) - 1)
+
+                                                for neighboring_cell in ast.literal_eval(cell['Neighborhood']):
+
+                                                    neighboring_cell_types_and_states = ast.literal_eval(Cells_in_image.iloc[neighboring_cell][df_column])
+
+                                                    surrounding_phenotype_counter_in = -1
+                                                    for surrounding_phenotype in surrounding_phenotypes:
+
+                                                        surrounding_phenotype_counter_in = surrounding_phenotype_counter_in + 1
+
+                                                        if len(neighboring_cell_types_and_states) == 2:
+
+                                                            if neighboring_cell_types_and_states[0][0] == surrounding_phenotype[0] and set(surrounding_phenotype[1]).issubset(set(neighboring_cell_types_and_states[0][1:])) is True and set(surrounding_phenotype[2]).isdisjoint(set(neighboring_cell_types_and_states[0][1:])) is True:
+                                                                surrounding_phenotype_counter_list_in[surrounding_phenotype_counter_in] = surrounding_phenotype_counter_list_in[surrounding_phenotype_counter_in] + 1
+
+                                            if select_neighboring_cell_type_and_state[0] == True:
+
+                                                neighborhood_counter_in = 0
+                                                for neighboring_cell in ast.literal_eval(cell['Neighborhood']):
+
+                                                    neighboring_cell_types_and_states = ast.literal_eval(Cells_in_image.iloc[neighboring_cell][df_column])
+
+                                                    if len(neighboring_cell_types_and_states) == 2:
+
+                                                        if neighboring_cell_types_and_states[0][0] == select_neighboring_cell_type_and_state[1][0] and set(select_neighboring_cell_type_and_state[1][1]).issubset(set(neighboring_cell_types_and_states[0][1:])) is True and set(select_neighboring_cell_type_and_state[1][2]).isdisjoint(set(neighboring_cell_types_and_states[0][1:])) is True:
+                                                            neighborhood_counter_in = neighborhood_counter_in + 1
+
+                                                if neighborhood_counter_in == 0:
+                                                    phenotype_per_image_counter_counter_in = phenotype_per_image_counter_counter_in - 1
+
+                                                if neighborhood_counter_in > 0:
+
+                                                    if len(neighboring_cell_types_and_states) == 2 and neighboring_cell_types_and_states[-1][0] == 'CD45+':
+                                                        surrounding_immune_per_image_counter_in = surrounding_immune_per_image_counter_in + (len(neighboring_cell_types_and_states) - 1)
+
+                                                    if len(neighboring_cell_types_and_states) == 2 and neighboring_cell_types_and_states[-1][0] == 'CD45-':
+                                                        surrounding_tissue_per_image_counter_in = surrounding_tissue_per_image_counter_in + (len(neighboring_cell_types_and_states) - 1)
+
+                                                    for neighboring_cell in ast.literal_eval(cell['Neighborhood']):
+
+                                                        neighboring_cell_types_and_states = ast.literal_eval(Cells_in_image.iloc[neighboring_cell][df_column])
+
+                                                        surrounding_phenotype_counter_in = -1
+                                                        for surrounding_phenotype in surrounding_phenotypes:
+
+                                                            surrounding_phenotype_counter_in = surrounding_phenotype_counter_in + 1
+
+                                                            if len(neighboring_cell_types_and_states) == 2:
+
+                                                                if neighboring_cell_types_and_states[0][0] == surrounding_phenotype[0] and set(surrounding_phenotype[1]).issubset(set(neighboring_cell_types_and_states[0][1:])) is True and set(surrounding_phenotype[2]).isdisjoint(set(neighboring_cell_types_and_states[0][1:])) is True:
+                                                                    surrounding_phenotype_counter_list_in[surrounding_phenotype_counter_in] = surrounding_phenotype_counter_list_in[surrounding_phenotype_counter_in] + 1
+
+                            if cell['Selected Areas'] == 'outside the area':
+
+                                cell_types_and_states = ast.literal_eval(cell[df_column])
+
+                                if add_mixed_cells == True:
+
+                                    if len(cell_types_and_states) >= 2 and cell_types_and_states[-1][0] == 'CD45+':
+                                        Percent_of_immune_per_image_counter_out = Percent_of_immune_per_image_counter_out + (len(cell_types_and_states) - 1)
+
+                                    if len(cell_types_and_states) >= 2 and cell_types_and_states[-1][0] == 'CD45-':
+                                        Percent_of_tissue_per_image_counter_out = Percent_of_tissue_per_image_counter_out + (len(cell_types_and_states) - 1)
+
+                                    for type_and_state in cell_types_and_states:
+
+                                        if type_and_state[0] == phenotype[0]:
+                                            percent_of_lineage_per_image_counter_out = percent_of_lineage_per_image_counter_out + 1
+
+                                        if type_and_state[0] == phenotype[0] and set(phenotype[1]).issubset(set(type_and_state[1:])) is True and set(phenotype[2]).isdisjoint(set(type_and_state[1:])) is True:
+
+                                            phenotype_per_image_counter_counter_out = phenotype_per_image_counter_counter_out + 1
+
+                                            if select_neighboring_cell_type_and_state[0] == False and analyse_neighboring_cells == True:
+
+                                                for neighboring_cell in ast.literal_eval(cell['Neighborhood']):
+
+                                                    neighboring_cell_types_and_states = ast.literal_eval(Cells_in_image.iloc[neighboring_cell][df_column])
+
+                                                    if len(neighboring_cell_types_and_states) >= 2 and neighboring_cell_types_and_states[-1][0] == 'CD45+':
+                                                        surrounding_immune_per_image_counter_out = surrounding_immune_per_image_counter_out + (len(neighboring_cell_types_and_states) - 1)
+
+                                                    if len(neighboring_cell_types_and_states) >= 2 and neighboring_cell_types_and_states[-1][0] == 'CD45-':
+                                                        surrounding_tissue_per_image_counter_out = surrounding_tissue_per_image_counter_out + (len(neighboring_cell_types_and_states) - 1)
+
+                                                    surrounding_phenotype_counter_out = -1
+                                                    for surrounding_phenotype in surrounding_phenotypes:
+
+                                                        surrounding_phenotype_counter_out = surrounding_phenotype_counter_out + 1
+
+                                                        for neighboring_type_and_state in neighboring_cell_types_and_states:
+
+                                                            if neighboring_type_and_state[0] == surrounding_phenotype[0] and set(surrounding_phenotype[1]).issubset(set(neighboring_type_and_state[1:])) is True and set(surrounding_phenotype[2]).isdisjoint(set(neighboring_type_and_state[1:])) is True:
+                                                                surrounding_phenotype_counter_list_out[surrounding_phenotype_counter_out] = surrounding_phenotype_counter_list_out[surrounding_phenotype_counter_out] + 1
+
+                                            if select_neighboring_cell_type_and_state[0] == True:
+
+                                                neighborhood_counter_out = 0
+                                                for neighboring_cell in ast.literal_eval(cell['Neighborhood']):
+
+                                                    neighboring_cell_types_and_states = ast.literal_eval(Cells_in_image.iloc[neighboring_cell][df_column])
+
+                                                    for neighboring_type_and_state in neighboring_cell_types_and_states:
+
+                                                        if neighboring_type_and_state[0] == select_neighboring_cell_type_and_state[1][0] and set(select_neighboring_cell_type_and_state[1][1]).issubset(set(neighboring_type_and_state[1:])) is True and set(select_neighboring_cell_type_and_state[1][2]).isdisjoint(set(neighboring_type_and_state[1:])) is True:
+                                                            neighborhood_counter_out = neighborhood_counter_out + 1
+
+                                                if neighborhood_counter_out == 0:
+                                                    phenotype_per_image_counter_counter_out = phenotype_per_image_counter_counter_out - 1
+
+                                                if neighborhood_counter_out > 0:
+
+                                                    for neighboring_cell in ast.literal_eval(cell['Neighborhood']):
+
+                                                        neighboring_cell_types_and_states = ast.literal_eval(Cells_in_image.iloc[neighboring_cell][df_column])
+
+                                                        if len(neighboring_cell_types_and_states) >= 2 and neighboring_cell_types_and_states[-1][0] == 'CD45+':
+                                                            surrounding_immune_per_image_counter_out = surrounding_immune_per_image_counter_out + (len(neighboring_cell_types_and_states) - 1)
+
+                                                        if len(neighboring_cell_types_and_states) >= 2 and neighboring_cell_types_and_states[-1][0] == 'CD45-':
+                                                            surrounding_tissue_per_image_counter_out = surrounding_tissue_per_image_counter_out + (len(neighboring_cell_types_and_states) - 1)
+
+                                                        surrounding_phenotype_counter_out = -1
+                                                        for surrounding_phenotype in surrounding_phenotypes:
+
+                                                            surrounding_phenotype_counter_out = surrounding_phenotype_counter_out + 1
+
+                                                            for neighboring_type_and_state in neighboring_cell_types_and_states:
+
+                                                                if neighboring_type_and_state[0] == surrounding_phenotype[0] and set(surrounding_phenotype[1]).issubset(set(neighboring_type_and_state[1:])) is True and set(surrounding_phenotype[2]).isdisjoint(set(neighboring_type_and_state[1:])) is True:
+                                                                    surrounding_phenotype_counter_list_out[surrounding_phenotype_counter_out] = surrounding_phenotype_counter_list_out[surrounding_phenotype_counter_out] + 1
+
+                                if add_mixed_cells == False:
+
+                                    if len(cell_types_and_states) == 2 and cell_types_and_states[-1][0] == 'CD45+':
+                                        Percent_of_immune_per_image_counter_out = Percent_of_immune_per_image_counter_out + 1
+
+                                    if len(cell_types_and_states) == 2 and cell_types_and_states[-1][0] == 'CD45-':
+                                        Percent_of_tissue_per_image_counter_out = Percent_of_tissue_per_image_counter_out + 1
+
+                                    if len(cell_types_and_states) == 2:
+
+                                        if cell_types_and_states[0][0] == phenotype[0]:
+                                            percent_of_lineage_per_image_counter_out = percent_of_lineage_per_image_counter_out + 1
+
+                                        if cell_types_and_states[0][0] == phenotype[0] and set(phenotype[1]).issubset(set(cell_types_and_states[0][1:])) is True and set(phenotype[2]).isdisjoint(set(cell_types_and_states[0][1:])) is True:
+
+                                            phenotype_per_image_counter_counter_out = phenotype_per_image_counter_counter_out + 1
+
+                                            if select_neighboring_cell_type_and_state[0] == False and analyse_neighboring_cells == True:
+
+                                                if len(neighboring_cell_types_and_states) == 2 and neighboring_cell_types_and_states[-1][0] == 'CD45+':
+                                                    surrounding_immune_per_image_counter_out = surrounding_immune_per_image_counter_out + (len(neighboring_cell_types_and_states) - 1)
+
+                                                if len(neighboring_cell_types_and_states) == 2 and neighboring_cell_types_and_states[-1][0] == 'CD45-':
+                                                    surrounding_tissue_per_image_counter_out = surrounding_tissue_per_image_counter_out + (len(neighboring_cell_types_and_states) - 1)
+
+                                                for neighboring_cell in ast.literal_eval(cell['Neighborhood']):
+
+                                                    neighboring_cell_types_and_states = ast.literal_eval(Cells_in_image.iloc[neighboring_cell][df_column])
+
+                                                    surrounding_phenotype_counter_out = -1
+                                                    for surrounding_phenotype in surrounding_phenotypes:
+
+                                                        surrounding_phenotype_counter_out = surrounding_phenotype_counter_out + 1
+
+                                                        if len(neighboring_cell_types_and_states) == 2:
+
+                                                            if neighboring_cell_types_and_states[0][0] == surrounding_phenotype[0] and set(surrounding_phenotype[1]).issubset(set(neighboring_cell_types_and_states[0][1:])) is True and set(surrounding_phenotype[2]).isdisjoint(set(neighboring_cell_types_and_states[0][1:])) is True:
+                                                                surrounding_phenotype_counter_list_out[surrounding_phenotype_counter_out] = surrounding_phenotype_counter_list_out[surrounding_phenotype_counter_out] + 1
+
+                                            if select_neighboring_cell_type_and_state[0] == True:
+
+                                                neighborhood_counter_out = 0
+                                                for neighboring_cell in ast.literal_eval(cell['Neighborhood']):
+
+                                                    neighboring_cell_types_and_states = ast.literal_eval(Cells_in_image.iloc[neighboring_cell][df_column])
+
+                                                    if len(neighboring_cell_types_and_states) == 2:
+
+                                                        if neighboring_cell_types_and_states[0][0] == select_neighboring_cell_type_and_state[1][0] and set(select_neighboring_cell_type_and_state[1][1]).issubset(set(neighboring_cell_types_and_states[0][1:])) is True and set(select_neighboring_cell_type_and_state[1][2]).isdisjoint(set(neighboring_cell_types_and_states[0][1:])) is True:
+                                                            neighborhood_counter_out = neighborhood_counter_out + 1
+
+                                                if neighborhood_counter_out == 0:
+                                                    phenotype_per_image_counter_counter_out = phenotype_per_image_counter_counter_out - 1
+
+                                                if neighborhood_counter_out > 0:
+
+                                                    if len(neighboring_cell_types_and_states) == 2 and neighboring_cell_types_and_states[-1][0] == 'CD45+':
+                                                        surrounding_immune_per_image_counter_out = surrounding_immune_per_image_counter_out + (len(neighboring_cell_types_and_states) - 1)
+
+                                                    if len(neighboring_cell_types_and_states) == 2 and neighboring_cell_types_and_states[-1][0] == 'CD45-':
+                                                        surrounding_tissue_per_image_counter_out = surrounding_tissue_per_image_counter_out + (len(neighboring_cell_types_and_states) - 1)
+
+                                                    for neighboring_cell in ast.literal_eval(cell['Neighborhood']):
+
+                                                        neighboring_cell_types_and_states = ast.literal_eval(Cells_in_image.iloc[neighboring_cell][df_column])
+
+                                                        surrounding_phenotype_counter_out = -1
+                                                        for surrounding_phenotype in surrounding_phenotypes:
+
+                                                            surrounding_phenotype_counter_out = surrounding_phenotype_counter_out + 1
+
+                                                            if len(neighboring_cell_types_and_states) == 2:
+
+                                                                if neighboring_cell_types_and_states[0][0] == surrounding_phenotype[0] and set(surrounding_phenotype[1]).issubset(set(neighboring_cell_types_and_states[0][1:])) is True and set(surrounding_phenotype[2]).isdisjoint(set(neighboring_cell_types_and_states[0][1:])) is True:
+                                                                    surrounding_phenotype_counter_list_out[surrounding_phenotype_counter_out] = surrounding_phenotype_counter_list_out[surrounding_phenotype_counter_out] + 1
+
+                        if select_area == False:
 
                             cell_types_and_states = ast.literal_eval(cell[df_column])
 
@@ -273,15 +1246,15 @@ def compare_the_same_phenotypes_and_neighbors_in_different_tissue(directory, fil
 
                                         if select_neighboring_cell_type_and_state[0] == False and analyse_neighboring_cells == True:
 
-                                            if len(neighboring_cell_types_and_states) == 2 and neighboring_cell_types_and_states[-1][0] == 'CD45+':
-                                                surrounding_immune_per_image_counter = surrounding_immune_per_image_counter + (len(neighboring_cell_types_and_states) - 1)
-
-                                            if len(neighboring_cell_types_and_states) == 2 and neighboring_cell_types_and_states[-1][0] == 'CD45-':
-                                                surrounding_tissue_per_image_counter = surrounding_tissue_per_image_counter + (len(neighboring_cell_types_and_states) - 1)
-
                                             for neighboring_cell in ast.literal_eval(cell['Neighborhood']):
 
                                                 neighboring_cell_types_and_states = ast.literal_eval(Cells_in_image.iloc[neighboring_cell][df_column])
+
+                                                if len(neighboring_cell_types_and_states) == 2 and neighboring_cell_types_and_states[-1][0] == 'CD45+':
+                                                    surrounding_immune_per_image_counter = surrounding_immune_per_image_counter + (len(neighboring_cell_types_and_states) - 1)
+
+                                                if len(neighboring_cell_types_and_states) == 2 and neighboring_cell_types_and_states[-1][0] == 'CD45-':
+                                                    surrounding_tissue_per_image_counter = surrounding_tissue_per_image_counter + (len(neighboring_cell_types_and_states) - 1)
 
                                                 surrounding_phenotype_counter = -1
                                                 for surrounding_phenotype in surrounding_phenotypes:
@@ -330,982 +1303,955 @@ def compare_the_same_phenotypes_and_neighbors_in_different_tissue(directory, fil
                                                             if neighboring_cell_types_and_states[0][0] == surrounding_phenotype[0] and set(surrounding_phenotype[1]).issubset(set(neighboring_cell_types_and_states[0][1:])) is True and set(surrounding_phenotype[2]).isdisjoint(set(neighboring_cell_types_and_states[0][1:])) is True:
                                                                 surrounding_phenotype_counter_list[surrounding_phenotype_counter] = surrounding_phenotype_counter_list[surrounding_phenotype_counter] + 1
 
-                        elif cell['Selected Areas'] == 'outside the area':
-
-                            continue
-
                     if select_area == False:
 
-                        cell_types_and_states = ast.literal_eval(cell[df_column])
+                        if phenotype_counter == 0:
 
-                        if add_mixed_cells == True:
+                            Percent_of_all_per_image_counter = Percent_of_immune_per_image_counter + Percent_of_tissue_per_image_counter
 
-                            if len(cell_types_and_states) >= 2 and cell_types_and_states[-1][0] == 'CD45+':
-                                Percent_of_immune_per_image_counter = Percent_of_immune_per_image_counter + (len(cell_types_and_states) - 1)
+                            analysis_row.append(Percent_of_all_per_image_counter)
+                            analysis_row.append(Percent_of_immune_per_image_counter)
+                            analysis_row.append(Percent_of_tissue_per_image_counter)
+                            analysis_row.append(file)
+                            analysis_row.append(file + '_' + str(image))
+                            analysis_row.append(2)
 
-                            if len(cell_types_and_states) >= 2 and cell_types_and_states[-1][0] == 'CD45-':
-                                Percent_of_tissue_per_image_counter = Percent_of_tissue_per_image_counter + (len(cell_types_and_states) - 1)
+                            if analyse_neighboring_cells == True:
+                                analysis_row_neighborhood.append(file)
+                                analysis_row_neighborhood.append(file + '_' + str(image))
+                                analysis_row_neighborhood.append(2)
 
-                            for type_and_state in cell_types_and_states:
+                        analysis_row.append(percent_of_lineage_per_image_counter)
+                        analysis_row.append(phenotype_per_image_counter_counter)
 
-                                if type_and_state[0] == phenotype[0]:
+                        if analyse_neighboring_cells == True:
+                            surrounding_cells_per_image_counter = surrounding_immune_per_image_counter + surrounding_tissue_per_image_counter
 
-                                    percent_of_lineage_per_image_counter = percent_of_lineage_per_image_counter + 1
+                            analysis_row_neighborhood.append(surrounding_cells_per_image_counter)
+                            analysis_row_neighborhood.append(surrounding_immune_per_image_counter)
+                            analysis_row_neighborhood.append(surrounding_tissue_per_image_counter)
 
-                                if type_and_state[0] == phenotype[0] and set(phenotype[1]).issubset(set(type_and_state[1:])) is True and set(phenotype[2]).isdisjoint(set(type_and_state[1:])) is True:
-
-                                    phenotype_per_image_counter_counter = phenotype_per_image_counter_counter + 1
-
-                                    if select_neighboring_cell_type_and_state[0] == False and analyse_neighboring_cells == True:
-
-                                        for neighboring_cell in ast.literal_eval(cell['Neighborhood']):
-
-                                            neighboring_cell_types_and_states = ast.literal_eval(Cells_in_image.iloc[neighboring_cell][df_column])
-
-                                            if len(neighboring_cell_types_and_states) >= 2 and neighboring_cell_types_and_states[-1][0] == 'CD45+':
-                                                surrounding_immune_per_image_counter = surrounding_immune_per_image_counter + (len(neighboring_cell_types_and_states) - 1)
-
-                                            if len(neighboring_cell_types_and_states) >= 2 and neighboring_cell_types_and_states[-1][0] == 'CD45-':
-                                                surrounding_tissue_per_image_counter = surrounding_tissue_per_image_counter + (len(neighboring_cell_types_and_states) - 1)
-
-                                            surrounding_phenotype_counter = -1
-                                            for surrounding_phenotype in surrounding_phenotypes:
-
-                                                surrounding_phenotype_counter = surrounding_phenotype_counter + 1
-
-                                                for neighboring_type_and_state in neighboring_cell_types_and_states:
-
-                                                    if neighboring_type_and_state[0] == surrounding_phenotype[0] and set(surrounding_phenotype[1]).issubset(set(neighboring_type_and_state[1:])) is True and set(surrounding_phenotype[2]).isdisjoint(set(neighboring_type_and_state[1:])) is True:
-
-                                                        surrounding_phenotype_counter_list[surrounding_phenotype_counter] = surrounding_phenotype_counter_list[surrounding_phenotype_counter] + 1
-
-                                    if select_neighboring_cell_type_and_state[0] == True:
-
-                                        neighborhood_counter = 0
-                                        for neighboring_cell in ast.literal_eval(cell['Neighborhood']):
-
-                                            neighboring_cell_types_and_states = ast.literal_eval(Cells_in_image.iloc[neighboring_cell][df_column])
-
-                                            for neighboring_type_and_state in neighboring_cell_types_and_states:
-
-                                                if neighboring_type_and_state[0] == select_neighboring_cell_type_and_state[1][0] and set(select_neighboring_cell_type_and_state[1][1]).issubset(set(neighboring_type_and_state[1:])) is True and set(select_neighboring_cell_type_and_state[1][2]).isdisjoint(set(neighboring_type_and_state[1:])) is True:
-                                                    neighborhood_counter = neighborhood_counter + 1
-
-                                        if neighborhood_counter == 0:
-
-                                            phenotype_per_image_counter_counter = phenotype_per_image_counter_counter - 1
-
-                                        if neighborhood_counter > 0:
-
-                                            for neighboring_cell in ast.literal_eval(cell['Neighborhood']):
-
-                                                neighboring_cell_types_and_states = ast.literal_eval(Cells_in_image.iloc[neighboring_cell][df_column])
-
-                                                if len(neighboring_cell_types_and_states) >= 2 and neighboring_cell_types_and_states[-1][0] == 'CD45+':
-                                                    surrounding_immune_per_image_counter = surrounding_immune_per_image_counter + (len(neighboring_cell_types_and_states) - 1)
-
-                                                if len(neighboring_cell_types_and_states) >= 2 and neighboring_cell_types_and_states[-1][0] == 'CD45-':
-                                                    surrounding_tissue_per_image_counter = surrounding_tissue_per_image_counter + (len(neighboring_cell_types_and_states) - 1)
-
-                                                surrounding_phenotype_counter = -1
-                                                for surrounding_phenotype in surrounding_phenotypes:
-
-                                                    surrounding_phenotype_counter = surrounding_phenotype_counter + 1
-
-                                                    for neighboring_type_and_state in neighboring_cell_types_and_states:
-
-                                                        if neighboring_type_and_state[0] == surrounding_phenotype[0] and set(surrounding_phenotype[1]).issubset(set(neighboring_type_and_state[1:])) is True and set(surrounding_phenotype[2]).isdisjoint(set(neighboring_type_and_state[1:])) is True:
-                                                            surrounding_phenotype_counter_list[surrounding_phenotype_counter] = surrounding_phenotype_counter_list[surrounding_phenotype_counter] + 1
-
-                        if add_mixed_cells == False:
-
-                            if len(cell_types_and_states) == 2 and cell_types_and_states[-1][0] == 'CD45+':
-                                Percent_of_immune_per_image_counter = Percent_of_immune_per_image_counter + 1
-
-                            if len(cell_types_and_states) == 2 and cell_types_and_states[-1][0] == 'CD45-':
-                                Percent_of_tissue_per_image_counter = Percent_of_tissue_per_image_counter + 1
-
-                            if len(cell_types_and_states) == 2:
-
-                                if cell_types_and_states[0][0] == phenotype[0]:
-
-                                    percent_of_lineage_per_image_counter = percent_of_lineage_per_image_counter + 1
-
-                                if cell_types_and_states[0][0] == phenotype[0] and set(phenotype[1]).issubset(set(cell_types_and_states[0][1:])) is True and set(phenotype[2]).isdisjoint(set(cell_types_and_states[0][1:])) is True:
-
-                                    phenotype_per_image_counter_counter = phenotype_per_image_counter_counter + 1
-
-                                    if select_neighboring_cell_type_and_state[0] == False and analyse_neighboring_cells == True:
-
-                                        if len(neighboring_cell_types_and_states) == 2 and neighboring_cell_types_and_states[-1][0] == 'CD45+':
-                                            surrounding_immune_per_image_counter = surrounding_immune_per_image_counter + (len(neighboring_cell_types_and_states) - 1)
-
-                                        if len(neighboring_cell_types_and_states) == 2 and neighboring_cell_types_and_states[-1][0] == 'CD45-':
-                                            surrounding_tissue_per_image_counter = surrounding_tissue_per_image_counter + (len(neighboring_cell_types_and_states) - 1)
-
-                                        for neighboring_cell in ast.literal_eval(cell['Neighborhood']):
-
-                                            neighboring_cell_types_and_states = ast.literal_eval(Cells_in_image.iloc[neighboring_cell][df_column])
-
-                                            surrounding_phenotype_counter = -1
-                                            for surrounding_phenotype in surrounding_phenotypes:
-
-                                                surrounding_phenotype_counter = surrounding_phenotype_counter + 1
-
-                                                if len(neighboring_cell_types_and_states) == 2:
-
-                                                    if neighboring_cell_types_and_states[0][0] == surrounding_phenotype[0] and set(surrounding_phenotype[1]).issubset(set(neighboring_cell_types_and_states[0][1:])) is True and set(surrounding_phenotype[2]).isdisjoint(set(neighboring_cell_types_and_states[0][1:])) is True:
-
-                                                        surrounding_phenotype_counter_list[surrounding_phenotype_counter] = surrounding_phenotype_counter_list[surrounding_phenotype_counter] + 1
-
-                                    if select_neighboring_cell_type_and_state[0] == True:
-
-                                        neighborhood_counter = 0
-                                        for neighboring_cell in ast.literal_eval(cell['Neighborhood']):
-
-                                            neighboring_cell_types_and_states = ast.literal_eval(Cells_in_image.iloc[neighboring_cell][df_column])
-
-                                            if len(neighboring_cell_types_and_states) == 2:
-
-                                                if neighboring_cell_types_and_states[0][0] == select_neighboring_cell_type_and_state[1][0] and set(select_neighboring_cell_type_and_state[1][1]).issubset(set(neighboring_cell_types_and_states[0][1:])) is True and set(select_neighboring_cell_type_and_state[1][2]).isdisjoint(set(neighboring_cell_types_and_states[0][1:])) is True:
-                                                    neighborhood_counter = neighborhood_counter + 1
-
-                                        if neighborhood_counter == 0:
-
-                                            phenotype_per_image_counter_counter = phenotype_per_image_counter_counter - 1
-
-                                        if neighborhood_counter > 0:
-
-                                            if len(neighboring_cell_types_and_states) == 2 and neighboring_cell_types_and_states[-1][0] == 'CD45+':
-                                                surrounding_immune_per_image_counter = surrounding_immune_per_image_counter + (len(neighboring_cell_types_and_states) - 1)
-
-                                            if len(neighboring_cell_types_and_states) == 2 and neighboring_cell_types_and_states[-1][0] == 'CD45-':
-                                                surrounding_tissue_per_image_counter = surrounding_tissue_per_image_counter + (len(neighboring_cell_types_and_states) - 1)
-
-                                            for neighboring_cell in ast.literal_eval(cell['Neighborhood']):
-
-                                                neighboring_cell_types_and_states = ast.literal_eval(Cells_in_image.iloc[neighboring_cell][df_column])
-
-                                                surrounding_phenotype_counter = -1
-                                                for surrounding_phenotype in surrounding_phenotypes:
-
-                                                    surrounding_phenotype_counter = surrounding_phenotype_counter + 1
-
-                                                    if len(neighboring_cell_types_and_states) == 2:
-
-                                                        if neighboring_cell_types_and_states[0][0] == surrounding_phenotype[0] and set(surrounding_phenotype[1]).issubset(set(neighboring_cell_types_and_states[0][1:])) is True and set(surrounding_phenotype[2]).isdisjoint(set(neighboring_cell_types_and_states[0][1:])) is True:
-                                                            surrounding_phenotype_counter_list[surrounding_phenotype_counter] = surrounding_phenotype_counter_list[surrounding_phenotype_counter] + 1
-
-                if phenotype_counter == 0:
-
-                    Percent_of_all_per_image_counter = Percent_of_immune_per_image_counter + Percent_of_tissue_per_image_counter
-
-                    analysis_row.append(Percent_of_all_per_image_counter)
-                    analysis_row.append(Percent_of_immune_per_image_counter)
-                    analysis_row.append(Percent_of_tissue_per_image_counter)
-                    analysis_row.append(file)
-                    analysis_row.append(file + '_' + str(image))
-                    analysis_row.append(1)
-
-                    if analyse_neighboring_cells == True:
-                        analysis_row_neighborhood.append(file)
-                        analysis_row_neighborhood.append(file + '_' + str(image))
-                        analysis_row_neighborhood.append(1)
-
-                analysis_row.append(percent_of_lineage_per_image_counter)
-                analysis_row.append(phenotype_per_image_counter_counter)
-
-                if analyse_neighboring_cells == True:
-                    surrounding_cells_per_image_counter = surrounding_immune_per_image_counter + surrounding_tissue_per_image_counter
-
-                    analysis_row_neighborhood.append(surrounding_cells_per_image_counter)
-                    analysis_row_neighborhood.append(surrounding_immune_per_image_counter)
-                    analysis_row_neighborhood.append(surrounding_tissue_per_image_counter)
-
-                    for count in surrounding_phenotype_counter_list:
-                        analysis_row_neighborhood.append(count)
-
-            analysis_df_phenotypes.loc[len(analysis_df_phenotypes)] = analysis_row
-
-            if analyse_neighboring_cells == True:
-                analysis_df_neigborhood.loc[len(analysis_df_neigborhood)] = analysis_row_neighborhood
-
-    UniqueFileName = cell_type_state_and_neighbor_meta_data_2.ImageName.unique()
-    DataFrameDict_file = {elem: pd.DataFrame() for elem in UniqueFileName}
-
-    for key in DataFrameDict_file.keys():
-        DataFrameDict_file[key] = cell_type_state_and_neighbor_meta_data_2[:][cell_type_state_and_neighbor_meta_data_2.ImageName == key].reset_index()
-
-    for file in UniqueFileName:
-
-        Cells_in_file = pd.DataFrame(DataFrameDict_file[file])
-
-        UniqueImage = Cells_in_file.ImageNumber.unique()
-        DataFrameDict_image = {elem: pd.DataFrame() for elem in UniqueImage}
-
-        for key in DataFrameDict_image.keys():
-            DataFrameDict_image[key] = Cells_in_file[:][Cells_in_file.ImageNumber == key].reset_index()
-
-        for image in UniqueImage:
-
-            analysis_row = []
-            analysis_row_neighborhood = []
-            phenotype_counter = -1
-            for phenotype in phenotypes:
-                phenotype_counter = phenotype_counter + 1
-
-                if phenotype_counter == 0:
-                    Percent_of_all_per_image_counter = 0
-                    Percent_of_immune_per_image_counter = 0
-                    Percent_of_tissue_per_image_counter = 0
-
-                percent_of_lineage_per_image_counter = 0
-                phenotype_per_image_counter_counter = 0
-
-                Cells_in_image = pd.DataFrame(DataFrameDict_image[image])
-
-                surrounding_immune_per_image_counter = 0
-                surrounding_tissue_per_image_counter = 0
-                surrounding_phenotype_counter_list = [0 for x in range(0, len(surrounding_phenotypes))]
-
-                for index, cell in Cells_in_image.iterrows():
+                            for count in surrounding_phenotype_counter_list:
+                                analysis_row_neighborhood.append(count)
 
                     if select_area == True:
 
-                        if cell['Selected Areas'] == 'in the area':
+                        if phenotype_counter == 0:
 
-                            cell_types_and_states = ast.literal_eval(cell[df_column])
+                            Percent_of_all_per_image_counter_in = Percent_of_immune_per_image_counter_in + Percent_of_tissue_per_image_counter_in
+                            Percent_of_all_per_image_counter_out = Percent_of_immune_per_image_counter_out + Percent_of_tissue_per_image_counter_out
 
-                            if add_mixed_cells == True:
+                            analysis_row_in.append(Percent_of_all_per_image_counter_in)
+                            analysis_row_in.append(Percent_of_immune_per_image_counter_in)
+                            analysis_row_in.append(Percent_of_tissue_per_image_counter_in)
+                            analysis_row_in.append(file)
+                            analysis_row_in.append(file + '_' + str(image))
+                            analysis_row_in.append(2)
+                            analysis_row_in.append('in')
 
-                                if len(cell_types_and_states) >= 2 and cell_types_and_states[-1][0] == 'CD45+':
-                                    Percent_of_immune_per_image_counter = Percent_of_immune_per_image_counter + (len(cell_types_and_states) - 1)
+                            analysis_row_out.append(Percent_of_all_per_image_counter_out)
+                            analysis_row_out.append(Percent_of_immune_per_image_counter_out)
+                            analysis_row_out.append(Percent_of_tissue_per_image_counter_out)
+                            analysis_row_out.append(file)
+                            analysis_row_out.append(file + '_' + str(image))
+                            analysis_row_out.append(2)
+                            analysis_row_out.append('out')
 
-                                if len(cell_types_and_states) >= 2 and cell_types_and_states[-1][0] == 'CD45-':
-                                    Percent_of_tissue_per_image_counter = Percent_of_tissue_per_image_counter + (len(cell_types_and_states) - 1)
+                            if analyse_neighboring_cells == True:
+                                analysis_row_neighborhood_in.append(file)
+                                analysis_row_neighborhood_in.append(file + '_' + str(image))
+                                analysis_row_neighborhood_in.append(2)
+                                analysis_row_neighborhood_in.append('in')
 
-                                for type_and_state in cell_types_and_states:
+                                analysis_row_neighborhood_out.append(file)
+                                analysis_row_neighborhood_out.append(file + '_' + str(image))
+                                analysis_row_neighborhood_out.append(2)
+                                analysis_row_neighborhood_out.append('out')
 
-                                    if type_and_state[0] == phenotype[0]:
-                                        percent_of_lineage_per_image_counter = percent_of_lineage_per_image_counter + 1
+                        analysis_row_in.append(percent_of_lineage_per_image_counter_in)
+                        analysis_row_in.append(phenotype_per_image_counter_counter_in)
 
-                                    if type_and_state[0] == phenotype[0] and set(phenotype[1]).issubset(set(type_and_state[1:])) is True and set(phenotype[2]).isdisjoint(set(type_and_state[1:])) is True:
+                        analysis_row_out.append(percent_of_lineage_per_image_counter_out)
+                        analysis_row_out.append(phenotype_per_image_counter_counter_out)
 
-                                        phenotype_per_image_counter_counter = phenotype_per_image_counter_counter + 1
+                if select_area == False:
+                    analysis_df_phenotypes.loc[len(analysis_df_phenotypes)] = analysis_row
 
-                                        if select_neighboring_cell_type_and_state[0] == False and analyse_neighboring_cells == True:
+                if select_area == True:
+                    
+                    analysis_df_phenotypes.loc[len(analysis_df_phenotypes)] = analysis_row_in
+                    analysis_df_phenotypes.loc[len(analysis_df_phenotypes)] = analysis_row_out
 
-                                            for neighboring_cell in ast.literal_eval(cell['Neighborhood']):
+                if analyse_neighboring_cells == True and select_area == False:
+                    analysis_df_neigborhood.loc[len(analysis_df_neigborhood)] = analysis_row_neighborhood
 
-                                                neighboring_cell_types_and_states = ast.literal_eval(Cells_in_image.iloc[neighboring_cell][df_column])
+                if analyse_neighboring_cells == True and select_area == True:
+                    analysis_df_neigborhood.loc[len(analysis_df_neigborhood)] = analysis_row_neighborhood_in
+                    analysis_df_neigborhood.loc[len(analysis_df_neigborhood)] = analysis_row_neighborhood_out
 
-                                                if len(neighboring_cell_types_and_states) >= 2 and neighboring_cell_types_and_states[-1][0] == 'CD45+':
-                                                    surrounding_immune_per_image_counter = surrounding_immune_per_image_counter + (len(neighboring_cell_types_and_states) - 1)
 
-                                                if len(neighboring_cell_types_and_states) >= 2 and neighboring_cell_types_and_states[-1][0] == 'CD45-':
-                                                    surrounding_tissue_per_image_counter = surrounding_tissue_per_image_counter + (len(neighboring_cell_types_and_states) - 1)
 
-                                                surrounding_phenotype_counter = -1
-                                                for surrounding_phenotype in surrounding_phenotypes:
+        # ------------------------------------- Final phenotypical analysis -------------------------------------
 
-                                                    surrounding_phenotype_counter = surrounding_phenotype_counter + 1
+        analysis_df_phenotypes = analysis_df_phenotypes.loc[:, ~analysis_df_phenotypes.columns.duplicated()].copy()
 
-                                                    for neighboring_type_and_state in neighboring_cell_types_and_states:
+        print(analysis_df_phenotypes.to_string())
 
-                                                        if neighboring_type_and_state[0] == surrounding_phenotype[0] and set(surrounding_phenotype[1]).issubset(set(neighboring_type_and_state[1:])) is True and set(surrounding_phenotype[2]).isdisjoint(set(neighboring_type_and_state[1:])) is True:
-                                                            surrounding_phenotype_counter_list[surrounding_phenotype_counter] = surrounding_phenotype_counter_list[surrounding_phenotype_counter] + 1
+        if select_area == True:
+            remove_row_list = list(analysis_df_phenotypes.loc[~(analysis_df_phenotypes['Percent_of_all_per_image'] > 0)]['FileName_Image'])
+            print(remove_row_list)
+            #analysis_df_phenotypes = analysis_df_phenotypes[~analysis_df_phenotypes['FileName_Image'].isin(remove_row_list)]
 
-                                        if select_neighboring_cell_type_and_state[0] == True:
+        if select_area == False:
 
-                                            neighborhood_counter = 0
-                                            for neighboring_cell in ast.literal_eval(cell['Neighborhood']):
+            columns_final_values = ['FileName', 'MetaData']
+            df_final_values = pd.DataFrame(columns=columns_final_values)
 
-                                                neighboring_cell_types_and_states = ast.literal_eval(Cells_in_image.iloc[neighboring_cell][df_column])
+            for phenotype in phenotypes:
 
-                                                for neighboring_type_and_state in neighboring_cell_types_and_states:
+                df_final_values_phenotype_column = []
+                FileName = []
+                MetaData = []
 
-                                                    if neighboring_type_and_state[0] == select_neighboring_cell_type_and_state[1][0] and set(select_neighboring_cell_type_and_state[1][1]).issubset(set(neighboring_type_and_state[1:])) is True and set(select_neighboring_cell_type_and_state[1][2]).isdisjoint(set(neighboring_type_and_state[1:])) is True:
-                                                        neighborhood_counter = neighborhood_counter + 1
+                plot_list_1 = []
+                plot_list_2 = []
 
-                                            if neighborhood_counter == 0:
-                                                phenotype_per_image_counter_counter = phenotype_per_image_counter_counter - 1
+                if statistics == 'mannwhitneyu':
 
-                                            if neighborhood_counter > 0:
+                    UniqueMeta_data = analysis_df_phenotypes.MetaData.unique()
+                    DataFrameDict_Metadata = {elem: pd.DataFrame() for elem in analysis_df_phenotypes.MetaData.unique()}
 
-                                                for neighboring_cell in ast.literal_eval(cell['Neighborhood']):
+                    for key in DataFrameDict_Metadata.keys():
+                        DataFrameDict_Metadata[key] = analysis_df_phenotypes[:][analysis_df_phenotypes.MetaData == key].reset_index()
 
-                                                    neighboring_cell_types_and_states = ast.literal_eval(Cells_in_image.iloc[neighboring_cell][df_column])
+                    for metadata in UniqueMeta_data:
 
-                                                    if len(neighboring_cell_types_and_states) >= 2 and neighboring_cell_types_and_states[-1][0] == 'CD45+':
-                                                        surrounding_immune_per_image_counter = surrounding_immune_per_image_counter + (len(neighboring_cell_types_and_states) - 1)
+                        Cells_in_metadata = DataFrameDict_Metadata[metadata]
 
-                                                    if len(neighboring_cell_types_and_states) >= 2 and neighboring_cell_types_and_states[-1][0] == 'CD45-':
-                                                        surrounding_tissue_per_image_counter = surrounding_tissue_per_image_counter + (len(neighboring_cell_types_and_states) - 1)
+                        if split_by == 'file':
 
-                                                    surrounding_phenotype_counter = -1
-                                                    for surrounding_phenotype in surrounding_phenotypes:
+                            UniqueFile = Cells_in_metadata.FileName.unique()
+                            DataFrameDict_file = {elem: pd.DataFrame() for elem in UniqueFile}
 
-                                                        surrounding_phenotype_counter = surrounding_phenotype_counter + 1
+                            for key in DataFrameDict_file.keys():
+                                DataFrameDict_file[key] = Cells_in_metadata[:][Cells_in_metadata.FileName == key].reset_index()
 
-                                                        for neighboring_type_and_state in neighboring_cell_types_and_states:
+                            for file in UniqueFile:
 
-                                                            if neighboring_type_and_state[0] == surrounding_phenotype[0] and set(surrounding_phenotype[1]).issubset(set(neighboring_type_and_state[1:])) is True and set(surrounding_phenotype[2]).isdisjoint(set(neighboring_type_and_state[1:])) is True:
-                                                                surrounding_phenotype_counter_list[surrounding_phenotype_counter] = surrounding_phenotype_counter_list[surrounding_phenotype_counter] + 1
+                                Cells_in_file = DataFrameDict_file[file]
 
-                            if add_mixed_cells == False:
+                                if percent_of == 'all':
+                                    sum_of_cells = sum(Cells_in_file['Percent_of_all_per_image'].to_list())
 
-                                if len(cell_types_and_states) == 2 and cell_types_and_states[-1][0] == 'CD45+':
-                                    Percent_of_immune_per_image_counter = Percent_of_immune_per_image_counter + 1
+                                if percent_of == 'immune':
+                                    sum_of_cells = sum(Cells_in_file['Percent_of_immune_per_image'].to_list())
 
-                                if len(cell_types_and_states) == 2 and cell_types_and_states[-1][0] == 'CD45-':
-                                    Percent_of_tissue_per_image_counter = Percent_of_tissue_per_image_counter + 1
+                                if percent_of == 'tissue':
+                                    sum_of_cells = sum(Cells_in_file['Percent_of_tissue_per_image'].to_list())
 
-                                if len(cell_types_and_states) == 2:
+                                if percent_of == 'lineage':
+                                    sum_of_cells = sum(Cells_in_file[phenotype[0]].to_list())
 
-                                    if cell_types_and_states[0][0] == phenotype[0]:
-                                        percent_of_lineage_per_image_counter = percent_of_lineage_per_image_counter + 1
+                                phenotype_df = str(phenotype[0] + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2]))
 
-                                    if cell_types_and_states[0][0] == phenotype[0] and set(phenotype[1]).issubset(set(cell_types_and_states[0][1:])) is True and set(phenotype[2]).isdisjoint(set(cell_types_and_states[0][1:])) is True:
+                                sum_of_selected_cells = sum(Cells_in_file[phenotype_df].to_list())
 
-                                        phenotype_per_image_counter_counter = phenotype_per_image_counter_counter + 1
+                                if metadata == 1:
 
-                                        if select_neighboring_cell_type_and_state[0] == False and analyse_neighboring_cells == True:
+                                    MetaData.append(1)
 
-                                            for neighboring_cell in ast.literal_eval(cell['Neighborhood']):
+                                    if int(sum_of_selected_cells) > 0:
+                                        plot_list_1.append((sum_of_selected_cells/sum_of_cells)*100)
+                                        df_final_values_phenotype_column.append((sum_of_selected_cells/sum_of_cells)*100)
+                                    if int(sum_of_selected_cells) == 0 or int(sum_of_cells) == 0:
+                                        plot_list_1.append(0)
+                                        df_final_values_phenotype_column.append(0)
 
-                                                neighboring_cell_types_and_states = ast.literal_eval(Cells_in_image.iloc[neighboring_cell][df_column])
+                                if metadata == 2:
 
-                                                if len(neighboring_cell_types_and_states) == 2 and neighboring_cell_types_and_states[-1][0] == 'CD45+':
-                                                    surrounding_immune_per_image_counter = surrounding_immune_per_image_counter + (len(neighboring_cell_types_and_states) - 1)
+                                    MetaData.append(2)
 
-                                                if len(neighboring_cell_types_and_states) == 2 and neighboring_cell_types_and_states[-1][0] == 'CD45-':
-                                                    surrounding_tissue_per_image_counter = surrounding_tissue_per_image_counter + (len(neighboring_cell_types_and_states) - 1)
+                                    if int(sum_of_selected_cells) > 0:
+                                        plot_list_2.append((sum_of_selected_cells/sum_of_cells) * 100)
+                                        df_final_values_phenotype_column.append((sum_of_selected_cells/sum_of_cells) * 100)
+                                    if int(sum_of_selected_cells) == 0 or int(sum_of_cells) == 0:
+                                        plot_list_2.append(0)
+                                        df_final_values_phenotype_column.append(0)
 
-                                                surrounding_phenotype_counter = -1
-                                                for surrounding_phenotype in surrounding_phenotypes:
+                                FileName.append(file)
 
-                                                    surrounding_phenotype_counter = surrounding_phenotype_counter + 1
+                        if split_by == 'image':
 
-                                                    if len(neighboring_cell_types_and_states) == 2:
+                            UniqueImage = Cells_in_metadata.FileName_Image.unique()
+                            DataFrameDict_image = {elem: pd.DataFrame() for elem in UniqueImage}
 
-                                                        if neighboring_cell_types_and_states[0][0] == surrounding_phenotype[0] and set(surrounding_phenotype[1]).issubset(set(neighboring_cell_types_and_states[0][1:])) is True and set(surrounding_phenotype[2]).isdisjoint(set(neighboring_cell_types_and_states[0][1:])) is True:
-                                                            surrounding_phenotype_counter_list[surrounding_phenotype_counter] = surrounding_phenotype_counter_list[surrounding_phenotype_counter] + 1
+                            for key in DataFrameDict_image.keys():
+                                DataFrameDict_image[key] = Cells_in_metadata[:][Cells_in_metadata.FileName_Image == key].reset_index()
 
-                                        if select_neighboring_cell_type_and_state[0] == True:
+                            for image in UniqueImage:
 
-                                            neighborhood_counter = 0
-                                            for neighboring_cell in ast.literal_eval(cell['Neighborhood']):
+                                Cells_in_image = DataFrameDict_image[image]
 
-                                                neighboring_cell_types_and_states = ast.literal_eval(Cells_in_image.iloc[neighboring_cell][df_column])
+                                if percent_of == 'all':
+                                    cells = Cells_in_image['Percent_of_all_per_image']
 
-                                                if len(neighboring_cell_types_and_states) == 2:
+                                if percent_of == 'immune':
+                                    cells = Cells_in_image['Percent_of_immune_per_image']
 
-                                                    if neighboring_cell_types_and_states[0][0] == select_neighboring_cell_type_and_state[1][0] and set(select_neighboring_cell_type_and_state[1][1]).issubset(set(neighboring_cell_types_and_states[0][1:])) is True and set(select_neighboring_cell_type_and_state[1][2]).isdisjoint(set(neighboring_cell_types_and_states[0][1:])) is True:
-                                                        neighborhood_counter = neighborhood_counter + 1
+                                if percent_of == 'tissue':
+                                    cells = Cells_in_image['Percent_of_tissue_per_image']
 
-                                            if neighborhood_counter == 0:
-                                                phenotype_per_image_counter_counter = phenotype_per_image_counter_counter - 1
+                                if percent_of == 'lineage':
+                                    cells = Cells_in_image[phenotype[0]]
 
-                                            if neighborhood_counter > 0:
+                                phenotype_df = str(phenotype[0] + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2]))
 
-                                                if len(neighboring_cell_types_and_states) == 2 and neighboring_cell_types_and_states[-1][0] == 'CD45+':
-                                                    surrounding_immune_per_image_counter = surrounding_immune_per_image_counter + (len(neighboring_cell_types_and_states) - 1)
+                                selected_cells = Cells_in_image[phenotype_df]
 
-                                                if len(neighboring_cell_types_and_states) == 2 and neighboring_cell_types_and_states[-1][0] == 'CD45-':
-                                                    surrounding_tissue_per_image_counter = surrounding_tissue_per_image_counter + (len(neighboring_cell_types_and_states) - 1)
+                                if metadata == 1:
 
-                                                for neighboring_cell in ast.literal_eval(cell['Neighborhood']):
+                                    if int(selected_cells) > 0:
+                                        plot_list_1.append(float((selected_cells / cells) * 100))
+                                    if int(selected_cells) == 0 or int(cells) == 0:
+                                        plot_list_1.append(0)
 
-                                                    neighboring_cell_types_and_states = ast.literal_eval(Cells_in_image.iloc[neighboring_cell][df_column])
+                                if metadata == 2:
 
-                                                    surrounding_phenotype_counter = -1
-                                                    for surrounding_phenotype in surrounding_phenotypes:
+                                    if int(selected_cells) > 0:
+                                        plot_list_2.append(float((selected_cells / cells) * 100))
+                                    if int(selected_cells) == 0 or int(cells) == 0:
+                                        plot_list_2.append(0)
 
-                                                        surrounding_phenotype_counter = surrounding_phenotype_counter + 1
+                if statistics == 'wilcoxon':
 
-                                                        if len(neighboring_cell_types_and_states) == 2:
+                    UniqueMeta_data = analysis_df_phenotypes.MetaData.unique()
+                    DataFrameDict_Metadata = {elem: pd.DataFrame() for elem in analysis_df_phenotypes.MetaData.unique()}
 
-                                                            if neighboring_cell_types_and_states[0][0] == surrounding_phenotype[0] and set(surrounding_phenotype[1]).issubset(set(neighboring_cell_types_and_states[0][1:])) is True and set(surrounding_phenotype[2]).isdisjoint(set(neighboring_cell_types_and_states[0][1:])) is True:
-                                                                surrounding_phenotype_counter_list[surrounding_phenotype_counter] = surrounding_phenotype_counter_list[surrounding_phenotype_counter] + 1
+                    for key in DataFrameDict_Metadata.keys():
+                        DataFrameDict_Metadata[key] = analysis_df_phenotypes[:][analysis_df_phenotypes.MetaData == key].reset_index()
 
-                        elif cell['Selected Areas'] == 'outside the area':
+                    for metadata in UniqueMeta_data:
 
-                            continue
-                            
-                    if select_area == False:
+                        Cells_in_metadata = DataFrameDict_Metadata[metadata]
 
-                        cell_types_and_states = ast.literal_eval(cell[df_column])
+                        if split_by == 'file':
 
-                        if add_mixed_cells == True:
+                            if metadata == 1:
 
-                            if len(cell_types_and_states) >= 2 and cell_types_and_states[-1][0] == 'CD45+':
-                                Percent_of_immune_per_image_counter = Percent_of_immune_per_image_counter + (len(cell_types_and_states) - 1)
+                                UniqueFile = Cells_in_metadata.FileName.unique()
+                                DataFrameDict_file = {elem: pd.DataFrame() for elem in UniqueFile}
 
-                            if len(cell_types_and_states) >= 2 and cell_types_and_states[-1][0] == 'CD45-':
-                                Percent_of_tissue_per_image_counter = Percent_of_tissue_per_image_counter + (len(cell_types_and_states) - 1)
+                                for key in DataFrameDict_file.keys():
+                                    DataFrameDict_file[key] = Cells_in_metadata[:][Cells_in_metadata.FileName == key].reset_index()
 
-                            for type_and_state in cell_types_and_states:
+                                for file in UniqueFile:
 
-                                if type_and_state[0] == phenotype[0]:
-                                    percent_of_lineage_per_image_counter = percent_of_lineage_per_image_counter + 1
+                                    FileName.append(file)
+                                    MetaData.append(1)
 
-                                if type_and_state[0] == phenotype[0] and set(phenotype[1]).issubset(set(type_and_state[1:])) is True and set(phenotype[2]).isdisjoint(set(type_and_state[1:])) is True:
+                                    Cells_in_file = DataFrameDict_file[file]
 
-                                    phenotype_per_image_counter_counter = phenotype_per_image_counter_counter + 1
+                                    if percent_of == 'all':
+                                        sum_of_cells = sum(Cells_in_file['Percent_of_all_per_image'].to_list())
 
-                                    if select_neighboring_cell_type_and_state[0] == False and analyse_neighboring_cells == True:
+                                    if percent_of == 'immune':
+                                        sum_of_cells = sum(Cells_in_file['Percent_of_immune_per_image'].to_list())
 
-                                        for neighboring_cell in ast.literal_eval(cell['Neighborhood']):
+                                    if percent_of == 'tissue':
+                                        sum_of_cells = sum(Cells_in_file['Percent_of_tissue_per_image'].to_list())
 
-                                            neighboring_cell_types_and_states = ast.literal_eval(Cells_in_image.iloc[neighboring_cell][df_column])
+                                    if percent_of == 'lineage':
+                                        sum_of_cells = sum(Cells_in_file[phenotype[0]].to_list())
 
-                                            if len(neighboring_cell_types_and_states) >= 2 and neighboring_cell_types_and_states[-1][0] == 'CD45+':
-                                                surrounding_immune_per_image_counter = surrounding_immune_per_image_counter + (len(neighboring_cell_types_and_states) - 1)
+                                    phenotype_df = str(phenotype[0] + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2]))
 
-                                            if len(neighboring_cell_types_and_states) >= 2 and neighboring_cell_types_and_states[-1][0] == 'CD45-':
-                                                surrounding_tissue_per_image_counter = surrounding_tissue_per_image_counter + (len(neighboring_cell_types_and_states) - 1)
+                                    sum_of_selected_cells = sum(Cells_in_file[phenotype_df].to_list())
 
-                                            surrounding_phenotype_counter = -1
-                                            for surrounding_phenotype in surrounding_phenotypes:
+                                    if int(sum_of_selected_cells) > 0:
+                                        plot_list_1.append((sum_of_selected_cells / sum_of_cells) * 100)
+                                        df_final_values_phenotype_column.append((sum_of_selected_cells / sum_of_cells) * 100)
 
-                                                surrounding_phenotype_counter = surrounding_phenotype_counter + 1
+                                    if int(sum_of_selected_cells) == 0 or int(sum_of_cells) == 0:
+                                        plot_list_1.append(0)
+                                        df_final_values_phenotype_column.append(0)
 
-                                                for neighboring_type_and_state in neighboring_cell_types_and_states:
+                                    paired_file = sample_parings[file]
+                                    paired_file_values = analysis_df_phenotypes.loc[analysis_df_phenotypes['FileName'] == paired_file]
 
-                                                    if neighboring_type_and_state[0] == surrounding_phenotype[0] and set(surrounding_phenotype[1]).issubset(set(neighboring_type_and_state[1:])) is True and set(surrounding_phenotype[2]).isdisjoint(set(neighboring_type_and_state[1:])) is True:
-                                                        surrounding_phenotype_counter_list[surrounding_phenotype_counter] = surrounding_phenotype_counter_list[surrounding_phenotype_counter] + 1
+                                    FileName.append(paired_file)
+                                    MetaData.append(2)
 
-                                    if select_neighboring_cell_type_and_state[0] == True:
+                                    if percent_of == 'all':
+                                        sum_of_paired_cells = sum(paired_file_values['Percent_of_all_per_image'].to_list())
 
-                                        neighborhood_counter = 0
-                                        for neighboring_cell in ast.literal_eval(cell['Neighborhood']):
+                                    if percent_of == 'immune':
+                                        sum_of_paired_cells = sum(paired_file_values['Percent_of_immune_per_image'].to_list())
 
-                                            neighboring_cell_types_and_states = ast.literal_eval(Cells_in_image.iloc[neighboring_cell][df_column])
+                                    if percent_of == 'tissue':
+                                        sum_of_paired_cells = sum(paired_file_values['Percent_of_tissue_per_image'].to_list())
 
-                                            for neighboring_type_and_state in neighboring_cell_types_and_states:
+                                    if percent_of == 'lineage':
+                                        sum_of_paired_cells = sum(paired_file_values[phenotype[0]].to_list())
 
-                                                if neighboring_type_and_state[0] == select_neighboring_cell_type_and_state[1][0] and set(select_neighboring_cell_type_and_state[1][1]).issubset(set(neighboring_type_and_state[1:])) is True and set(select_neighboring_cell_type_and_state[1][2]).isdisjoint(set(neighboring_type_and_state[1:])) is True:
-                                                    neighborhood_counter = neighborhood_counter + 1
+                                    phenotype_df = str(phenotype[0] + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2]))
 
-                                        if neighborhood_counter == 0:
-                                            phenotype_per_image_counter_counter = phenotype_per_image_counter_counter - 1
+                                    sum_of_selected_paired_cells = sum(paired_file_values[phenotype_df].to_list())
 
-                                        if neighborhood_counter > 0:
+                                    if int(sum_of_selected_paired_cells) > 0:
+                                        plot_list_2.append((sum_of_selected_paired_cells / sum_of_paired_cells) * 100)
+                                        df_final_values_phenotype_column.append((sum_of_selected_paired_cells / sum_of_paired_cells) * 100)
 
-                                            for neighboring_cell in ast.literal_eval(cell['Neighborhood']):
+                                    if int(sum_of_selected_paired_cells) == 0 or int(sum_of_paired_cells) == 0:
+                                        plot_list_2.append(0)
+                                        df_final_values_phenotype_column.append(0)
 
-                                                neighboring_cell_types_and_states = ast.literal_eval(Cells_in_image.iloc[neighboring_cell][df_column])
+                            else:
+                                continue
 
-                                                if len(neighboring_cell_types_and_states) >= 2 and neighboring_cell_types_and_states[-1][0] == 'CD45+':
-                                                    surrounding_immune_per_image_counter = surrounding_immune_per_image_counter + (len(neighboring_cell_types_and_states) - 1)
+                        if split_by == 'image':
 
-                                                if len(neighboring_cell_types_and_states) >= 2 and neighboring_cell_types_and_states[-1][0] == 'CD45-':
-                                                    surrounding_tissue_per_image_counter = surrounding_tissue_per_image_counter + (len(neighboring_cell_types_and_states) - 1)
+                            UniqueImage = Cells_in_metadata.FileName_Image.unique()
+                            DataFrameDict_image = {elem: pd.DataFrame() for elem in UniqueImage}
 
-                                                surrounding_phenotype_counter = -1
-                                                for surrounding_phenotype in surrounding_phenotypes:
+                            for key in DataFrameDict_image.keys():
+                                DataFrameDict_image[key] = Cells_in_metadata[:][Cells_in_metadata.FileName_Image == key].reset_index()
 
-                                                    surrounding_phenotype_counter = surrounding_phenotype_counter + 1
+                            for image in UniqueImage:
 
-                                                    for neighboring_type_and_state in neighboring_cell_types_and_states:
+                                Cells_in_image = DataFrameDict_image[image]
 
-                                                        if neighboring_type_and_state[0] == surrounding_phenotype[0] and set(surrounding_phenotype[1]).issubset(set(neighboring_type_and_state[1:])) is True and set(surrounding_phenotype[2]).isdisjoint(set(neighboring_type_and_state[1:])) is True:
-                                                            surrounding_phenotype_counter_list[surrounding_phenotype_counter] = surrounding_phenotype_counter_list[surrounding_phenotype_counter] + 1
+                                if percent_of == 'all':
+                                    cells = Cells_in_image['Percent_of_all_per_image']
 
-                        if add_mixed_cells == False:
+                                if percent_of == 'immune':
+                                    cells = Cells_in_image['Percent_of_immune_per_image']
 
-                            if len(cell_types_and_states) == 2 and cell_types_and_states[-1][0] == 'CD45+':
-                                Percent_of_immune_per_image_counter = Percent_of_immune_per_image_counter + 1
+                                if percent_of == 'tissue':
+                                    cells = Cells_in_image['Percent_of_tissue_per_image']
 
-                            if len(cell_types_and_states) == 2 and cell_types_and_states[-1][0] == 'CD45-':
-                                Percent_of_tissue_per_image_counter = Percent_of_tissue_per_image_counter + 1
+                                if percent_of == 'lineage':
+                                    cells = Cells_in_image[phenotype[0]]
 
-                            if len(cell_types_and_states) == 2:
+                                phenotype_df = str(phenotype[0] + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2]))
 
-                                if cell_types_and_states[0][0] == phenotype[0]:
-                                    percent_of_lineage_per_image_counter = percent_of_lineage_per_image_counter + 1
+                                selected_cells = Cells_in_image[phenotype_df]
 
-                                if cell_types_and_states[0][0] == phenotype[0] and set(phenotype[1]).issubset(set(cell_types_and_states[0][1:])) is True and set(phenotype[2]).isdisjoint(set(cell_types_and_states[0][1:])) is True:
+                                if metadata == 1:
 
-                                    phenotype_per_image_counter_counter = phenotype_per_image_counter_counter + 1
+                                    if int(selected_cells) > 0:
+                                        plot_list_1.append(float((selected_cells / cells) * 100))
+                                    if int(selected_cells) == 0 or int(cells) == 0:
+                                        plot_list_1.append(0)
 
-                                    if select_neighboring_cell_type_and_state[0] == False and analyse_neighboring_cells == True:
+                                if metadata == 2:
 
-                                        for neighboring_cell in ast.literal_eval(cell['Neighborhood']):
+                                    if int(selected_cells) > 0:
+                                        plot_list_2.append(float((selected_cells / cells) * 100))
+                                    if int(selected_cells) == 0 or int(cells) == 0:
+                                        plot_list_2.append(0)
 
-                                            neighboring_cell_types_and_states = ast.literal_eval(Cells_in_image.iloc[neighboring_cell][df_column])
+                df_final_values[str(phenotype[0]) + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2])] = df_final_values_phenotype_column
+                df_final_values['FileName'] = FileName
+                df_final_values['MetaData'] = MetaData
 
-                                            if len(neighboring_cell_types_and_states) == 2 and neighboring_cell_types_and_states[-1][0] == 'CD45+':
-                                                surrounding_immune_per_image_counter = surrounding_immune_per_image_counter + (len(neighboring_cell_types_and_states) - 1)
+                plot_list = [plot_list_1, plot_list_2]
 
-                                            if len(neighboring_cell_types_and_states) == 2 and neighboring_cell_types_and_states[-1][0] == 'CD45-':
-                                                surrounding_tissue_per_image_counter = surrounding_tissue_per_image_counter + (len(neighboring_cell_types_and_states) - 1)
+                try:
 
-                                            surrounding_phenotype_counter = -1
-                                            for surrounding_phenotype in surrounding_phenotypes:
+                    if statistics == 'mannwhitneyu':
+                        U1, p = mannwhitneyu(plot_list[0], plot_list[1], method='auto')
 
-                                                surrounding_phenotype_counter = surrounding_phenotype_counter + 1
+                    if statistics == 'wilcoxon':
+                        result = wilcoxon(plot_list[0], plot_list[1])
+                        p = result.pvalue
 
-                                                if len(neighboring_cell_types_and_states) == 2:
+                    max_plot = max([max(plot) for plot in plot_list])
+                    min_plot = min([min(plot) for plot in plot_list])
 
-                                                    if neighboring_cell_types_and_states[0][0] == surrounding_phenotype[0] and set(surrounding_phenotype[1]).issubset(set(neighboring_cell_types_and_states[0][1:])) is True and set(surrounding_phenotype[2]).isdisjoint(set(neighboring_cell_types_and_states[0][1:])) is True:
-                                                        surrounding_phenotype_counter_list[surrounding_phenotype_counter] = surrounding_phenotype_counter_list[surrounding_phenotype_counter] + 1
+                    fig, axs = plt.subplots(nrows=1, ncols=1, figsize=(4, 4))
 
-                                    if select_neighboring_cell_type_and_state[0] == True:
+                    if statistics == 'wilcoxon' and split_by == 'file':
 
-                                        neighborhood_counter = 0
-                                        for neighboring_cell in ast.literal_eval(cell['Neighborhood']):
+                        for x in range(0, len(plot_list[0])):
+                            axs.plot([1, 2], [plot_list[0][x], plot_list[1][x]], color='gray', alpha=0.25)
 
-                                            neighboring_cell_types_and_states = ast.literal_eval(Cells_in_image.iloc[neighboring_cell][df_column])
+                    axs.scatter([1 for x in range(len(plot_list[0]))], plot_list[0], c=colors[0], s=45)
+                    axs.scatter([2 for x in range(len(plot_list[1]))], plot_list[1], c=colors[1], s=45)
+                    axs.boxplot(plot_list, widths=0.4)
 
-                                            if len(neighboring_cell_types_and_states) == 2:
+                    if split_by == 'file':
+                        if 0.005 < p < 0.05:
+                            axs.plot([1.25, 1.75], [max_plot * 1.15, max_plot * 1.15], color='black')
+                            axs.text(1.45, max_plot * 1.2, '*', fontsize=18, color='black')
+                        elif 0.0005 < p < 0.005:
+                            axs.plot([1.25, 1.75], [max_plot * 1.15, max_plot * 1.15], color='black')
+                            axs.text(1.41, max_plot * 1.2, '**', fontsize=18, color='black')
+                        elif 0.00005 < p < 0.0005:
+                            axs.plot([1.25, 1.75], [max_plot * 1.15, max_plot * 1.15], color='black')
+                            axs.text(1.37, max_plot * 1.2, '***', fontsize=18, color='black')
+                        elif p < 0.00005:
+                            axs.plot([1.25, 1.75], [max_plot * 1.15, max_plot * 1.15], color='black')
+                            axs.text(1.34, max_plot * 1.2, '****', fontsize=18, color='black')
 
-                                                if neighboring_cell_types_and_states[0][0] == select_neighboring_cell_type_and_state[1][0] and set(select_neighboring_cell_type_and_state[1][1]).issubset(set(neighboring_cell_types_and_states[0][1:])) is True and set(select_neighboring_cell_type_and_state[1][2]).isdisjoint(set(neighboring_cell_types_and_states[0][1:])) is True:
-                                                    neighborhood_counter = neighborhood_counter + 1
+                        axs.set_ylim(min_plot - ((max_plot - min_plot) * 0.1), max_plot * 1.35)
+                        axs.set_xticks([1, 2], ['Metadata 1','Metadata 2'], rotation=-90)
 
-                                        if neighborhood_counter == 0:
-                                            phenotype_per_image_counter_counter = phenotype_per_image_counter_counter - 1
+                    if select_neighboring_cell_type_and_state[0] == False:
 
-                                        if neighborhood_counter > 0:
+                        if percent_of == 'all' or percent_of == 'immune' or percent_of == 'tissue':
 
-                                            if len(neighboring_cell_types_and_states) == 2 and neighboring_cell_types_and_states[-1][0] == 'CD45+':
-                                                surrounding_immune_per_image_counter = surrounding_immune_per_image_counter + (len(neighboring_cell_types_and_states) - 1)
+                            final_output_folder = output_folder + '/' + 'Phenotyping/' + 'Percent of ' + percent_of + ' cells per ' + split_by + '/'
 
-                                            if len(neighboring_cell_types_and_states) == 2 and neighboring_cell_types_and_states[-1][0] == 'CD45-':
-                                                surrounding_tissue_per_image_counter = surrounding_tissue_per_image_counter + (len(neighboring_cell_types_and_states) - 1)
+                            if os.path.isdir(final_output_folder) == True:
+                                pass
+                            else:
+                                os.makedirs(final_output_folder)
 
-                                            for neighboring_cell in ast.literal_eval(cell['Neighborhood']):
-
-                                                neighboring_cell_types_and_states = ast.literal_eval(Cells_in_image.iloc[neighboring_cell][df_column])
-
-                                                surrounding_phenotype_counter = -1
-                                                for surrounding_phenotype in surrounding_phenotypes:
-
-                                                    surrounding_phenotype_counter = surrounding_phenotype_counter + 1
-
-                                                    if len(neighboring_cell_types_and_states) == 2:
-
-                                                        if neighboring_cell_types_and_states[0][0] == surrounding_phenotype[0] and set(surrounding_phenotype[1]).issubset(set(neighboring_cell_types_and_states[0][1:])) is True and set(surrounding_phenotype[2]).isdisjoint(set(neighboring_cell_types_and_states[0][1:])) is True:
-                                                            surrounding_phenotype_counter_list[surrounding_phenotype_counter] = surrounding_phenotype_counter_list[surrounding_phenotype_counter] + 1
-
-                if phenotype_counter == 0:
-                    Percent_of_all_per_image_counter = Percent_of_immune_per_image_counter + Percent_of_tissue_per_image_counter
-
-                    analysis_row.append(Percent_of_all_per_image_counter)
-                    analysis_row.append(Percent_of_immune_per_image_counter)
-                    analysis_row.append(Percent_of_tissue_per_image_counter)
-                    analysis_row.append(file)
-                    analysis_row.append(file + '_' + str(image))
-                    analysis_row.append(2)
-
-                    if analyse_neighboring_cells == True:
-                        analysis_row_neighborhood.append(file)
-                        analysis_row_neighborhood.append(file + '_' + str(image))
-                        analysis_row_neighborhood.append(2)
-
-                analysis_row.append(percent_of_lineage_per_image_counter)
-                analysis_row.append(phenotype_per_image_counter_counter)
-
-                if analyse_neighboring_cells == True:
-
-                    surrounding_cells_per_image_counter = surrounding_immune_per_image_counter + surrounding_tissue_per_image_counter
-
-                    analysis_row_neighborhood.append(surrounding_cells_per_image_counter)
-                    analysis_row_neighborhood.append(surrounding_immune_per_image_counter)
-                    analysis_row_neighborhood.append(surrounding_tissue_per_image_counter)
-
-                    for count in surrounding_phenotype_counter_list:
-                        analysis_row_neighborhood.append(count)
-
-            analysis_df_phenotypes.loc[len(analysis_df_phenotypes)] = analysis_row
-
-            if analyse_neighboring_cells == True:
-                analysis_df_neigborhood.loc[len(analysis_df_neigborhood)] = analysis_row_neighborhood
-
-    analysis_df_phenotypes = analysis_df_phenotypes.loc[:, ~analysis_df_phenotypes.columns.duplicated()].copy()
-
-    remove_row_list = list(analysis_df_phenotypes.loc[~(analysis_df_phenotypes['Percent_of_all_per_image'] > 0)]['FileName_Image'])
-
-    if select_area == True:
-        
-        analysis_df_phenotypes = analysis_df_phenotypes[~analysis_df_phenotypes['FileName_Image'].isin(remove_row_list)]
-
-    columns_final_values = ['FileName', 'MetaData']
-    df_final_values = pd.DataFrame(columns=columns_final_values)
-
-    for phenotype in phenotypes:
-
-        df_final_values_phenotype_column = []
-        FileName = []
-        MetaData = []
-
-        plot_list_1 = []
-        plot_list_2 = []
-
-        if statistics == 'mannwhitneyu':
-
-            UniqueMeta_data = analysis_df_phenotypes.MetaData.unique()
-            DataFrameDict_Metadata = {elem: pd.DataFrame() for elem in analysis_df_phenotypes.MetaData.unique()}
-
-            for key in DataFrameDict_Metadata.keys():
-                DataFrameDict_Metadata[key] = analysis_df_phenotypes[:][analysis_df_phenotypes.MetaData == key].reset_index()
-
-            for metadata in UniqueMeta_data:
-
-                Cells_in_metadata = DataFrameDict_Metadata[metadata]
-
-                if split_by == 'file':
-
-                    UniqueFile = Cells_in_metadata.FileName.unique()
-                    DataFrameDict_file = {elem: pd.DataFrame() for elem in UniqueFile}
-
-                    for key in DataFrameDict_file.keys():
-                        DataFrameDict_file[key] = Cells_in_metadata[:][Cells_in_metadata.FileName == key].reset_index()
-
-                    for file in UniqueFile:
-
-                        Cells_in_file = DataFrameDict_file[file]
-
-                        if percent_of == 'all':
-                            sum_of_cells = sum(Cells_in_file['Percent_of_all_per_image'].to_list())
-
-                        if percent_of == 'immune':
-                            sum_of_cells = sum(Cells_in_file['Percent_of_immune_per_image'].to_list())
-
-                        if percent_of == 'tissue':
-                            sum_of_cells = sum(Cells_in_file['Percent_of_tissue_per_image'].to_list())
+                            axs.set_title(str(phenotype[0]) + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2]))
+                            axs.set_ylabel('Percent of ' + percent_of + ' cells per ' + split_by)
+                            export_file_path = final_output_folder + str(phenotype[0]) + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2]) + '.png'
 
                         if percent_of == 'lineage':
-                            sum_of_cells = sum(Cells_in_file[phenotype[0]].to_list())
 
-                        phenotype_df = str(phenotype[0] + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2]))
+                            final_output_folder = output_folder + '/' + 'Phenotyping/' + 'Percent of ' + str(phenotype[0]) + ' cells per ' + split_by + '/'
 
-                        sum_of_selected_cells = sum(Cells_in_file[phenotype_df].to_list())
+                            if os.path.isdir(final_output_folder) == True:
+                                pass
+                            else:
+                                os.makedirs(final_output_folder)
 
-                        if metadata == 1:
+                            axs.set_title(str(phenotype[0]) + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2]))
+                            axs.set_ylabel('Percent of ' + phenotype[0] + ' cells per ' + split_by)
+                            export_file_path = final_output_folder + str(phenotype[0]) + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2]) + '.png'
 
-                            MetaData.append(1)
+                    if select_neighboring_cell_type_and_state[0] == True:
 
-                            if int(sum_of_selected_cells) > 0:
-                                plot_list_1.append((sum_of_selected_cells/sum_of_cells)*100)
-                                df_final_values_phenotype_column.append((sum_of_selected_cells/sum_of_cells)*100)
-                            if int(sum_of_selected_cells) == 0 or int(sum_of_cells) == 0:
-                                plot_list_1.append(0)
-                                df_final_values_phenotype_column.append(0)
+                        if percent_of == 'all' or percent_of == 'immune' or percent_of == 'tissue':
 
-                        if metadata == 2:
+                            final_output_folder = output_folder + '/' + 'Phenotyping/' + 'Percent of ' + percent_of + ' cells per ' + split_by + '/' + 'neighboring ' + select_neighboring_cell_type_and_state[1][0] + ' pos ' + str(select_neighboring_cell_type_and_state[1][1]) + ' neg ' + str(select_neighboring_cell_type_and_state[1][1]) + '/'
 
-                            MetaData.append(2)
+                            if os.path.isdir(final_output_folder) == True:
+                                pass
+                            else:
+                                os.makedirs(final_output_folder)
 
-                            if int(sum_of_selected_cells) > 0:
-                                plot_list_2.append((sum_of_selected_cells/sum_of_cells) * 100)
-                                df_final_values_phenotype_column.append((sum_of_selected_cells/sum_of_cells) * 100)
-                            if int(sum_of_selected_cells) == 0 or int(sum_of_cells) == 0:
-                                plot_list_2.append(0)
-                                df_final_values_phenotype_column.append(0)
-
-                        FileName.append(file)
-
-                if split_by == 'image':
-
-                    UniqueImage = Cells_in_metadata.FileName_Image.unique()
-                    DataFrameDict_image = {elem: pd.DataFrame() for elem in UniqueImage}
-
-                    for key in DataFrameDict_image.keys():
-                        DataFrameDict_image[key] = Cells_in_metadata[:][Cells_in_metadata.FileName_Image == key].reset_index()
-
-                    for image in UniqueImage:
-
-                        Cells_in_image = DataFrameDict_image[image]
-
-                        if percent_of == 'all':
-                            cells = Cells_in_image['Percent_of_all_per_image']
-
-                        if percent_of == 'immune':
-                            cells = Cells_in_image['Percent_of_immune_per_image']
-
-                        if percent_of == 'tissue':
-                            cells = Cells_in_image['Percent_of_tissue_per_image']
+                            axs.set_title(str(phenotype[0]) + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2]) + '\n neigboring: ' + select_neighboring_cell_type_and_state[1][0] + ' pos ' + str(select_neighboring_cell_type_and_state[1][1]) + ' neg ' + str(select_neighboring_cell_type_and_state[1][1]))
+                            axs.set_ylabel('Percent of ' + percent_of + ' cells per ' + split_by)
+                            export_file_path = final_output_folder + str(phenotype[0]) + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2]) + ' neighboring ' + select_neighboring_cell_type_and_state[1][0] + ' pos ' + str(select_neighboring_cell_type_and_state[1][1]) + ' neg ' + str(select_neighboring_cell_type_and_state[1][1]) + '.png'
 
                         if percent_of == 'lineage':
-                            cells = Cells_in_image[phenotype[0]]
 
-                        phenotype_df = str(phenotype[0] + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2]))
+                            final_output_folder = output_folder + '/' + 'Phenotyping/' + 'Percent of ' + str(phenotype[0]) + ' cells per ' + split_by + '/'  + 'neighboring ' + select_neighboring_cell_type_and_state[1][0] + ' pos ' + str(select_neighboring_cell_type_and_state[1][1]) + ' neg ' + str(select_neighboring_cell_type_and_state[1][1]) + '/'
 
-                        selected_cells = Cells_in_image[phenotype_df]
+                            if os.path.isdir(final_output_folder) == True:
+                                pass
+                            else:
+                                os.makedirs(final_output_folder)
 
-                        if metadata == 1:
+                            axs.set_title(str(phenotype[0]) + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2]) + '\n neigboring: ' + select_neighboring_cell_type_and_state[1][0] + ' pos ' + str(select_neighboring_cell_type_and_state[1][1]) + ' neg ' + str(select_neighboring_cell_type_and_state[1][1]))
+                            axs.set_ylabel('Percent of ' + phenotype[0] + ' cells per ' + split_by)
+                            export_file_path = final_output_folder + str(phenotype[0]) + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2]) + ' neighboring ' + select_neighboring_cell_type_and_state[1][0] + ' pos ' + str(select_neighboring_cell_type_and_state[1][1]) + ' neg ' + str(select_neighboring_cell_type_and_state[1][1]) + '.png'
 
-                            if int(selected_cells) > 0:
-                                plot_list_1.append(float((selected_cells / cells) * 100))
-                            if int(selected_cells) == 0 or int(cells) == 0:
-                                plot_list_1.append(0)
+                    fig.savefig(export_file_path, bbox_inches='tight', dpi=600)
+                    plt.close()
 
-                        if metadata == 2:
+                except ValueError:
+                    print('The Phenotype: ' + str(phenotype[0]) + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2]) + ' does not exist')
+                    continue
 
-                            if int(selected_cells) > 0:
-                                plot_list_2.append(float((selected_cells / cells) * 100))
-                            if int(selected_cells) == 0 or int(cells) == 0:
-                                plot_list_2.append(0)
+        if select_area == True:
 
-        if statistics == 'wilcoxon':
+            UniqueArea = analysis_df_phenotypes.In_area.unique()
+            DataFrameDict_Area = {elem: pd.DataFrame() for elem in analysis_df_phenotypes.In_area.unique()}
 
-            UniqueMeta_data = analysis_df_phenotypes.MetaData.unique()
-            DataFrameDict_Metadata = {elem: pd.DataFrame() for elem in analysis_df_phenotypes.MetaData.unique()}
+            for key in DataFrameDict_Area.keys():
+                DataFrameDict_Area[key] = analysis_df_phenotypes[:][analysis_df_phenotypes.In_area == key].reset_index()
 
-            for key in DataFrameDict_Metadata.keys():
-                DataFrameDict_Metadata[key] = analysis_df_phenotypes[:][analysis_df_phenotypes.MetaData == key].reset_index()
+            columns_final_values = ['FileName', 'MetaData']
+            df_final_values_in = pd.DataFrame(columns=columns_final_values)
+            df_final_values_out = pd.DataFrame(columns=columns_final_values)
 
-            for metadata in UniqueMeta_data:
+            for phenotype in phenotypes:
 
-                Cells_in_metadata = DataFrameDict_Metadata[metadata]
+                df_final_values_phenotype_column_in = []
+                FileName_in = []
+                MetaData_in = []
+                plot_list_1_in = []
+                plot_list_2_in = []
 
-                if split_by == 'file':
+                df_final_values_phenotype_column_out = []
+                FileName_out = []
+                MetaData_out = []
+                plot_list_1_out = []
+                plot_list_2_out = []
 
-                    if metadata == 1:
+                if statistics == 'mannwhitneyu':
 
-                        UniqueFile = Cells_in_metadata.FileName.unique()
-                        DataFrameDict_file = {elem: pd.DataFrame() for elem in UniqueFile}
+                    UniqueMeta_data = DataFrameDict_Area['in'].MetaData.unique()
+                    DataFrameDict_Metadata = {elem: pd.DataFrame() for elem in DataFrameDict_Area['in'].MetaData.unique()}
 
-                        for key in DataFrameDict_file.keys():
-                            DataFrameDict_file[key] = Cells_in_metadata[:][Cells_in_metadata.FileName == key].reset_index()
+                    for key in DataFrameDict_Metadata.keys():
+                        DataFrameDict_Metadata[key] = DataFrameDict_Area['in'][:][DataFrameDict_Area['in'].MetaData == key].reset_index()
 
-                        for file in UniqueFile:
+                    for metadata in UniqueMeta_data:
 
-                            FileName.append(file)
-                            MetaData.append(1)
+                        Cells_in_metadata = DataFrameDict_Metadata[metadata]
 
-                            Cells_in_file = DataFrameDict_file[file]
+                        if split_by == 'file':
 
-                            if percent_of == 'all':
-                                sum_of_cells = sum(Cells_in_file['Percent_of_all_per_image'].to_list())
+                            UniqueFile = Cells_in_metadata.FileName.unique()
+                            DataFrameDict_file = {elem: pd.DataFrame() for elem in UniqueFile}
 
-                            if percent_of == 'immune':
-                                sum_of_cells = sum(Cells_in_file['Percent_of_immune_per_image'].to_list())
+                            for key in DataFrameDict_file.keys():
+                                DataFrameDict_file[key] = Cells_in_metadata[:][Cells_in_metadata.FileName == key].reset_index()
 
-                            if percent_of == 'tissue':
-                                sum_of_cells = sum(Cells_in_file['Percent_of_tissue_per_image'].to_list())
+                            for file in UniqueFile:
 
-                            if percent_of == 'lineage':
-                                sum_of_cells = sum(Cells_in_file[phenotype[0]].to_list())
+                                Cells_in_file_in = DataFrameDict_file[file]
+                                Cells_in_file_out = DataFrameDict_Area['out'].loc[DataFrameDict_Area['out']['FileName'] == file]
 
-                            phenotype_df = str(phenotype[0] + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2]))
+                                if percent_of == 'all':
+                                    sum_of_cells_in = sum(Cells_in_file_in['Percent_of_all_per_image'].to_list())
+                                    sum_of_cells_out = sum(Cells_in_file_out['Percent_of_all_per_image'].to_list())
 
-                            sum_of_selected_cells = sum(Cells_in_file[phenotype_df].to_list())
+                                if percent_of == 'immune':
+                                    sum_of_cells_in = sum(Cells_in_file_in['Percent_of_immune_per_image'].to_list())
+                                    sum_of_cells_out = sum(Cells_in_file_out['Percent_of_immune_per_image'].to_list())
 
-                            if int(sum_of_selected_cells) > 0:
-                                plot_list_1.append((sum_of_selected_cells / sum_of_cells) * 100)
-                                df_final_values_phenotype_column.append((sum_of_selected_cells / sum_of_cells) * 100)
+                                if percent_of == 'tissue':
+                                    sum_of_cells_in = sum(Cells_in_file_in['Percent_of_tissue_per_image'].to_list())
+                                    sum_of_cells_out = sum(Cells_in_file_out['Percent_of_tissue_per_image'].to_list())
 
-                            if int(sum_of_selected_cells) == 0 or int(sum_of_cells) == 0:
-                                plot_list_1.append(0)
-                                df_final_values_phenotype_column.append(0)
+                                if percent_of == 'lineage':
+                                    sum_of_cells_in = sum(Cells_in_file_in[phenotype[0]].to_list())
+                                    sum_of_cells_out = sum(Cells_in_file_out[phenotype[0]].to_list())
 
-                            paired_file = sample_parings[file]
-                            paired_file_values = analysis_df_phenotypes.loc[analysis_df_phenotypes['FileName'] == paired_file]
+                                phenotype_df = str(phenotype[0] + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2]))
 
-                            FileName.append(paired_file)
-                            MetaData.append(2)
+                                sum_of_selected_cells_in = sum(Cells_in_file_in[phenotype_df].to_list())
+                                sum_of_selected_cells_out = sum(Cells_in_file_out[phenotype_df].to_list())
 
-                            if percent_of == 'all':
-                                sum_of_paired_cells = sum(paired_file_values['Percent_of_all_per_image'].to_list())
+                                if metadata == 1:
 
-                            if percent_of == 'immune':
-                                sum_of_paired_cells = sum(paired_file_values['Percent_of_immune_per_image'].to_list())
+                                    MetaData_in.append(1)
+                                    MetaData_out.append(1)
 
-                            if percent_of == 'tissue':
-                                sum_of_paired_cells = sum(paired_file_values['Percent_of_tissue_per_image'].to_list())
+                                    if int(sum_of_selected_cells_in) > 0:
+                                        plot_list_1_in.append((sum_of_selected_cells_in / (sum_of_cells_in + sum_of_cells_out)) * 100)
+                                        df_final_values_phenotype_column_in.append((sum_of_selected_cells_in / (sum_of_cells_in + sum_of_cells_out)) * 100)
 
-                            if percent_of == 'lineage':
-                                sum_of_paired_cells = sum(paired_file_values[phenotype[0]].to_list())
+                                    if int(sum_of_selected_cells_out) > 0:
+                                        plot_list_1_out.append((sum_of_selected_cells_out / (sum_of_cells_in + sum_of_cells_out)) * 100)
+                                        df_final_values_phenotype_column_out.append((sum_of_selected_cells_out / (sum_of_cells_in + sum_of_cells_out)) * 100)
 
-                            phenotype_df = str(phenotype[0] + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2]))
+                                    if int(sum_of_selected_cells_in) == 0 or int((sum_of_cells_in + sum_of_cells_out)) == 0:
+                                        plot_list_1_in.append(0)
+                                        df_final_values_phenotype_column_in.append(0)
 
-                            sum_of_selected_paired_cells = sum(paired_file_values[phenotype_df].to_list())
+                                    if int(sum_of_selected_cells_out) == 0 or int((sum_of_cells_in + sum_of_cells_out)) == 0:
+                                        plot_list_1_out.append(0)
+                                        df_final_values_phenotype_column_out.append(0)
 
-                            if int(sum_of_selected_paired_cells) > 0:
-                                plot_list_2.append((sum_of_selected_paired_cells / sum_of_paired_cells) * 100)
-                                df_final_values_phenotype_column.append((sum_of_selected_paired_cells / sum_of_paired_cells) * 100)
+                                if metadata == 2:
 
-                            if int(sum_of_selected_paired_cells) == 0 or int(sum_of_paired_cells) == 0:
-                                plot_list_2.append(0)
-                                df_final_values_phenotype_column.append(0)
+                                    MetaData_in.append(2)
+                                    MetaData_out.append(2)
 
-                    else:
-                        continue
+                                    if int(sum_of_selected_cells_in) > 0:
+                                        plot_list_1_in.append((sum_of_selected_cells_in / (sum_of_cells_in + sum_of_cells_out)) * 100)
+                                        df_final_values_phenotype_column_in.append((sum_of_selected_cells_in / (sum_of_cells_in + sum_of_cells_out)) * 100)
 
-                if split_by == 'image':
+                                    if int(sum_of_selected_cells_out) > 0:
+                                        plot_list_1_out.append((sum_of_selected_cells_out / (sum_of_cells_in + sum_of_cells_out)) * 100)
+                                        df_final_values_phenotype_column_out.append((sum_of_selected_cells_out / (sum_of_cells_in + sum_of_cells_out)) * 100)
 
-                    UniqueImage = Cells_in_metadata.FileName_Image.unique()
-                    DataFrameDict_image = {elem: pd.DataFrame() for elem in UniqueImage}
+                                    if int(sum_of_selected_cells_in) == 0 or int((sum_of_cells_in + sum_of_cells_out)) == 0:
+                                        plot_list_1_in.append(0)
+                                        df_final_values_phenotype_column_in.append(0)
 
-                    for key in DataFrameDict_image.keys():
-                        DataFrameDict_image[key] = Cells_in_metadata[:][Cells_in_metadata.FileName_Image == key].reset_index()
+                                    if int(sum_of_selected_cells_out) == 0 or int((sum_of_cells_in + sum_of_cells_out)) == 0:
+                                        plot_list_1_out.append(0)
+                                        df_final_values_phenotype_column_out.append(0)
 
-                    for image in UniqueImage:
+                                FileName_in.append(file)
+                                FileName_out.append(file)
 
-                        Cells_in_image = DataFrameDict_image[image]
+                if statistics == 'wilcoxon':
 
-                        if percent_of == 'all':
-                            cells = Cells_in_image['Percent_of_all_per_image']
+                    UniqueMeta_data = DataFrameDict_Area['in'].MetaData.unique()
+                    DataFrameDict_Metadata = {elem: pd.DataFrame() for elem in DataFrameDict_Area['in'].MetaData.unique()}
 
-                        if percent_of == 'immune':
-                            cells = Cells_in_image['Percent_of_immune_per_image']
+                    for key in DataFrameDict_Metadata.keys():
+                        DataFrameDict_Metadata[key] = DataFrameDict_Area['in'][:][DataFrameDict_Area['in'].MetaData == key].reset_index()
 
-                        if percent_of == 'tissue':
-                            cells = Cells_in_image['Percent_of_tissue_per_image']
+                    for metadata in UniqueMeta_data:
+
+                        Cells_in_metadata = DataFrameDict_Metadata[metadata]
+
+                        if split_by == 'file':
+
+                            if metadata == 1:
+
+                                UniqueFile = Cells_in_metadata.FileName.unique()
+                                DataFrameDict_file = {elem: pd.DataFrame() for elem in UniqueFile}
+
+                                for key in DataFrameDict_file.keys():
+                                    DataFrameDict_file[key] = Cells_in_metadata[:][Cells_in_metadata.FileName == key].reset_index(drop=True)
+
+                                for file in UniqueFile:
+
+                                    FileName_in.append(file)
+                                    MetaData_in.append(1)
+                                    FileName_out.append(file)
+                                    MetaData_out.append(1)
+
+                                    Cells_in_file_in = DataFrameDict_file[file]
+                                    Cells_in_file_out = DataFrameDict_Area['out'].loc[DataFrameDict_Area['out']['FileName'] == file]
+
+                                    if percent_of == 'all':
+                                        sum_of_cells_in = sum(Cells_in_file_in['Percent_of_all_per_image'].to_list())
+                                        sum_of_cells_out = sum(Cells_in_file_out['Percent_of_all_per_image'].to_list())
+
+                                    if percent_of == 'immune':
+                                        sum_of_cells_in = sum(Cells_in_file_in['Percent_of_immune_per_image'].to_list())
+                                        sum_of_cells_out = sum(Cells_in_file_out['Percent_of_immune_per_image'].to_list())
+
+                                    if percent_of == 'tissue':
+                                        sum_of_cells_in = sum(Cells_in_file_in['Percent_of_tissue_per_image'].to_list())
+                                        sum_of_cells_out = sum(Cells_in_file_out['Percent_of_tissue_per_image'].to_list())
+
+                                    if percent_of == 'lineage':
+                                        sum_of_cells_in = sum(Cells_in_file_in[phenotype[0]].to_list())
+                                        sum_of_cells_out = sum(Cells_in_file_out[phenotype[0]].to_list())
+
+                                    phenotype_df = str(phenotype[0] + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2]))
+
+                                    sum_of_selected_cells_in = sum(Cells_in_file_in[phenotype_df].to_list())
+                                    sum_of_selected_cells_out = sum(Cells_in_file_out[phenotype_df].to_list())
+
+                                    if int(sum_of_selected_cells_in) == 0 or int(sum_of_cells_in + sum_of_cells_out) == 0:
+                                        plot_list_1_in.append(0)
+                                        df_final_values_phenotype_column_in.append(0)
+
+                                    if int(sum_of_selected_cells_out) == 0 or int(sum_of_cells_in + sum_of_cells_out) == 0:
+                                        plot_list_1_out.append(0)
+                                        df_final_values_phenotype_column_out.append(0)
+
+                                    if int(sum_of_selected_cells_in) > 0:
+                                        plot_list_1_in.append((sum_of_selected_cells_in / (sum_of_cells_in + sum_of_cells_out)) * 100)
+                                        df_final_values_phenotype_column_in.append((sum_of_selected_cells_in / (sum_of_cells_in + sum_of_cells_out)) * 100)
+
+                                    if int(sum_of_selected_cells_out) > 0:
+                                        plot_list_1_out.append((sum_of_selected_cells_out / (sum_of_cells_in + sum_of_cells_out)) * 100)
+                                        df_final_values_phenotype_column_out.append((sum_of_selected_cells_out / (sum_of_cells_in + sum_of_cells_out)) * 100)
+
+                                    paired_file = sample_parings[file]
+
+                                    paired_file_values_in = DataFrameDict_Area['in'].loc[DataFrameDict_Area['in']['FileName'] == paired_file]
+                                    paired_file_values_out = DataFrameDict_Area['out'].loc[DataFrameDict_Area['out']['FileName'] == paired_file]
+
+                                    FileName_in.append(paired_file)
+                                    MetaData_in.append(2)
+                                    FileName_out.append(paired_file)
+                                    MetaData_out.append(2)
+
+                                    if percent_of == 'all':
+                                        sum_of_paired_cells_in = sum(paired_file_values_in['Percent_of_all_per_image'].to_list())
+                                        sum_of_paired_cells_out = sum(paired_file_values_out['Percent_of_all_per_image'].to_list())
+
+                                    if percent_of == 'immune':
+                                        sum_of_paired_cells_in = sum(paired_file_values_in['Percent_of_immune_per_image'].to_list())
+                                        sum_of_paired_cells_out = sum(paired_file_values_out['Percent_of_immune_per_image'].to_list())
+
+                                    if percent_of == 'tissue':
+                                        sum_of_paired_cells_in = sum(paired_file_values_in['Percent_of_tissue_per_image'].to_list())
+                                        sum_of_paired_cells_out = sum(paired_file_values_out['Percent_of_tissue_per_image'].to_list())
+
+                                    if percent_of == 'lineage':
+                                        sum_of_paired_cells_in = sum(paired_file_values_in[phenotype[0]].to_list())
+                                        sum_of_paired_cells_out = sum(paired_file_values_out[phenotype[0]].to_list())
+
+                                    phenotype_df = str(phenotype[0] + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2]))
+
+                                    sum_of_selected_paired_cells_in = sum(paired_file_values_in[phenotype_df].to_list())
+                                    sum_of_selected_paired_cells_out = sum(paired_file_values_out[phenotype_df].to_list())
+
+                                    if int(sum_of_selected_paired_cells_in) == 0 or int(sum_of_paired_cells_in+sum_of_paired_cells_out) == 0:
+                                        plot_list_2_in.append(0)
+                                        df_final_values_phenotype_column_in.append(0)
+
+                                    if int(sum_of_selected_paired_cells_out) == 0 or int(sum_of_paired_cells_in+sum_of_paired_cells_out) == 0:
+                                        plot_list_2_out.append(0)
+                                        df_final_values_phenotype_column_out.append(0)
+
+                                    if int(sum_of_selected_paired_cells_in) > 0:
+                                        plot_list_2_in.append((sum_of_selected_paired_cells_in / (sum_of_paired_cells_in+sum_of_paired_cells_out)) * 100)
+                                        df_final_values_phenotype_column_in.append((sum_of_selected_paired_cells_in / (sum_of_paired_cells_in+sum_of_paired_cells_out)) * 100)
+
+                                    if int(sum_of_selected_paired_cells_out) > 0:
+                                        plot_list_2_out.append((sum_of_selected_paired_cells_out / (sum_of_paired_cells_in+sum_of_paired_cells_out)) * 100)
+                                        df_final_values_phenotype_column_out.append((sum_of_selected_paired_cells_out / (sum_of_paired_cells_in+sum_of_paired_cells_out)) * 100)
+
+                            else:
+                                continue
+
+                df_final_values_in[str(phenotype[0]) + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2])] = df_final_values_phenotype_column_in
+                df_final_values_in['FileName'] = FileName_in
+                df_final_values_in['MetaData'] = MetaData_in
+                plot_list_in = [plot_list_1_in, plot_list_2_in]
+
+                df_final_values_out[str(phenotype[0]) + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2])] = df_final_values_phenotype_column_out
+                df_final_values_out['FileName'] = FileName_out
+                df_final_values_out['MetaData'] = MetaData_out
+                plot_list_out = [plot_list_1_out, plot_list_2_out]
+
+                try:
+
+                    if statistics == 'mannwhitneyu':
+                        U1, p = mannwhitneyu(plot_list_in[0], plot_list_in[1], method='auto')
+
+                    if statistics == 'wilcoxon':
+                        result = wilcoxon(plot_list_in[0], plot_list_in[1])
+                        p = result.pvalue
+
+                    max_plot = max([max(plot) for plot in plot_list_in])
+                    min_plot = min([min(plot) for plot in plot_list_in])
+
+                    fig, axs = plt.subplots(nrows=1, ncols=1, figsize=(4, 4))
+
+                    if statistics == 'wilcoxon' and split_by == 'file':
+
+                        for x in range(0, len(plot_list_in[0])):
+                            axs.plot([1, 2], [plot_list_in[0][x], plot_list_in[1][x]], color='gray', alpha=0.25)
+
+                    axs.scatter([1 for x in range(len(plot_list_in[0]))], plot_list_in[0], c=colors[0], s=45)
+                    axs.scatter([2 for x in range(len(plot_list_in[1]))], plot_list_in[1], c=colors[1], s=45)
+                    axs.boxplot(plot_list_in, widths=0.4)
+
+                    if split_by == 'file':
+                        if 0.005 < p < 0.05:
+                            axs.plot([1.25, 1.75], [max_plot * 1.15, max_plot * 1.15], color='black')
+                            axs.text(1.45, max_plot * 1.2, '*', fontsize=18, color='black')
+                        elif 0.0005 < p < 0.005:
+                            axs.plot([1.25, 1.75], [max_plot * 1.15, max_plot * 1.15], color='black')
+                            axs.text(1.41, max_plot * 1.2, '**', fontsize=18, color='black')
+                        elif 0.00005 < p < 0.0005:
+                            axs.plot([1.25, 1.75], [max_plot * 1.15, max_plot * 1.15], color='black')
+                            axs.text(1.37, max_plot * 1.2, '***', fontsize=18, color='black')
+                        elif p < 0.00005:
+                            axs.plot([1.25, 1.75], [max_plot * 1.15, max_plot * 1.15], color='black')
+                            axs.text(1.34, max_plot * 1.2, '****', fontsize=18, color='black')
+
+                        axs.set_ylim(min_plot - ((max_plot - min_plot) * 0.1), max_plot * 1.35)
+                        axs.set_xticks([1, 2], ['Metadata 1', 'Metadata 2'], rotation=-90)
+
+                    if select_neighboring_cell_type_and_state[0] == False:
+
+                        if percent_of == 'all' or percent_of == 'immune' or percent_of == 'tissue':
+
+                            final_output_folder = output_folder + '/' + 'Phenotyping/' + 'Percent of ' + percent_of + ' cells per ' + split_by + '/'
+
+                            if os.path.isdir(final_output_folder) == True:
+                                pass
+                            else:
+                                os.makedirs(final_output_folder)
+
+                            axs.set_title(str(phenotype[0]) + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2]))
+                            axs.set_ylabel('Percent of ' + percent_of + ' cells per ' + split_by)
+                            export_file_path = final_output_folder + str(phenotype[0]) + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2]) + '_in.png'
 
                         if percent_of == 'lineage':
-                            cells = Cells_in_image[phenotype[0]]
 
-                        phenotype_df = str(phenotype[0] + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2]))
+                            final_output_folder = output_folder + '/' + 'Phenotyping/' + 'Percent of ' + str(phenotype[0]) + ' cells per ' + split_by + '/'
 
-                        selected_cells = Cells_in_image[phenotype_df]
+                            if os.path.isdir(final_output_folder) == True:
+                                pass
+                            else:
+                                os.makedirs(final_output_folder)
 
-                        if metadata == 1:
+                            axs.set_title(str(phenotype[0]) + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2]))
+                            axs.set_ylabel('Percent of ' + phenotype[0] + ' cells per ' + split_by)
+                            export_file_path = final_output_folder + str(phenotype[0]) + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2]) + '_in.png'
 
-                            if int(selected_cells) > 0:
-                                plot_list_1.append(float((selected_cells / cells) * 100))
-                            if int(selected_cells) == 0 or int(cells) == 0:
-                                plot_list_1.append(0)
+                    if select_neighboring_cell_type_and_state[0] == True:
 
-                        if metadata == 2:
+                        if percent_of == 'all' or percent_of == 'immune' or percent_of == 'tissue':
 
-                            if int(selected_cells) > 0:
-                                plot_list_2.append(float((selected_cells / cells) * 100))
-                            if int(selected_cells) == 0 or int(cells) == 0:
-                                plot_list_2.append(0)
+                            final_output_folder = output_folder + '/' + 'Phenotyping/' + 'Percent of ' + percent_of + ' cells per ' + split_by + '/' + 'neighboring ' + select_neighboring_cell_type_and_state[1][0] + ' pos ' + str(select_neighboring_cell_type_and_state[1][1]) + ' neg ' + str(select_neighboring_cell_type_and_state[1][1]) + '/'
 
-        df_final_values[str(phenotype[0]) + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2])] = df_final_values_phenotype_column
-        df_final_values['FileName'] = FileName
-        df_final_values['MetaData'] = MetaData
+                            if os.path.isdir(final_output_folder) == True:
+                                pass
+                            else:
+                                os.makedirs(final_output_folder)
 
-        plot_list = [plot_list_1, plot_list_2]
+                            axs.set_title(str(phenotype[0]) + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2]) + '\n neigboring: ' + select_neighboring_cell_type_and_state[1][0] + ' pos ' + str(select_neighboring_cell_type_and_state[1][1]) + ' neg ' + str(select_neighboring_cell_type_and_state[1][1]))
+                            axs.set_ylabel('Percent of ' + percent_of + ' cells per ' + split_by)
+                            export_file_path = final_output_folder + str(phenotype[0]) + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2]) + ' neighboring ' + select_neighboring_cell_type_and_state[1][0] + ' pos ' + str(select_neighboring_cell_type_and_state[1][1]) + ' neg ' + str(select_neighboring_cell_type_and_state[1][1]) + '_in.png'
 
-        try:
+                        if percent_of == 'lineage':
 
-            if statistics == 'mannwhitneyu':
-                U1, p = mannwhitneyu(plot_list[0], plot_list[1], method='auto')
+                            final_output_folder = output_folder + '/' + 'Phenotyping/' + 'Percent of ' + str(phenotype[0]) + ' cells per ' + split_by + '/' + 'neighboring ' + select_neighboring_cell_type_and_state[1][0] + ' pos ' + str(select_neighboring_cell_type_and_state[1][1]) + ' neg ' + str(select_neighboring_cell_type_and_state[1][1]) + '/'
 
-            if statistics == 'wilcoxon':
-                result = wilcoxon(plot_list[0], plot_list[1])
-                p = result.pvalue
+                            if os.path.isdir(final_output_folder) == True:
+                                pass
+                            else:
+                                os.makedirs(final_output_folder)
 
-            max_plot = max([max(plot) for plot in plot_list])
-            min_plot = min([min(plot) for plot in plot_list])
+                            axs.set_title(str(phenotype[0]) + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2]) + '\n neigboring: ' + select_neighboring_cell_type_and_state[1][0] + ' pos ' + str(select_neighboring_cell_type_and_state[1][1]) + ' neg ' + str(select_neighboring_cell_type_and_state[1][1]))
+                            axs.set_ylabel('Percent of ' + phenotype[0] + ' cells per ' + split_by)
+                            export_file_path = final_output_folder + str(phenotype[0]) + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2]) + ' neighboring ' + select_neighboring_cell_type_and_state[1][0] + ' pos ' + str(select_neighboring_cell_type_and_state[1][1]) + ' neg ' + str(select_neighboring_cell_type_and_state[1][1]) + '_in.png'
 
-            fig, axs = plt.subplots(nrows=1, ncols=1, figsize=(4, 4))
+                    fig.savefig(export_file_path, bbox_inches='tight', dpi=600)
+                    plt.close()
 
-            if statistics == 'wilcoxon' and split_by == 'file':
+                except ValueError:
+                    print('The Phenotype: ' + str(phenotype[0]) + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2]) + ' does not exist')
+                    continue
 
-                for x in range(0, len(plot_list[0])):
-                    axs.plot([1, 2], [plot_list[0][x], plot_list[1][x]], color='gray', alpha=0.25)
+                #--------------------------------------------
 
-            axs.scatter([1 for x in range(len(plot_list[0]))], plot_list[0], c=colors[0], s=45)
-            axs.scatter([2 for x in range(len(plot_list[1]))], plot_list[1], c=colors[1], s=45)
-            axs.boxplot(plot_list, widths=0.4)
+                try:
 
-            if 0.005 < p < 0.05:
-                axs.plot([1.25, 1.75], [max_plot * 1.15, max_plot * 1.15], color='black')
-                axs.text(1.45, max_plot * 1.2, '*', fontsize=18, color='black')
-            elif 0.0005 < p < 0.005:
-                axs.plot([1.25, 1.75], [max_plot * 1.15, max_plot * 1.15], color='black')
-                axs.text(1.41, max_plot * 1.2, '**', fontsize=18, color='black')
-            elif 0.00005 < p < 0.0005:
-                axs.plot([1.25, 1.75], [max_plot * 1.15, max_plot * 1.15], color='black')
-                axs.text(1.37, max_plot * 1.2, '***', fontsize=18, color='black')
-            elif p < 0.00005:
-                axs.plot([1.25, 1.75], [max_plot * 1.15, max_plot * 1.15], color='black')
-                axs.text(1.34, max_plot * 1.2, '****', fontsize=18, color='black')
+                    if statistics == 'mannwhitneyu':
+                        U1, p = mannwhitneyu(plot_list_out[0], plot_list_out[1], method='auto')
 
-            axs.set_ylim(min_plot - ((max_plot - min_plot) * 0.1), max_plot * 1.35)
-            axs.set_xticks([1, 2], ['Metadata 1','Metadata 2'], rotation=-90)
+                    if statistics == 'wilcoxon':
+                        result = wilcoxon(plot_list_out[0], plot_list_out[1])
+                        p = result.pvalue
 
-            if select_neighboring_cell_type_and_state[0] == False:
+                    max_plot = max([max(plot) for plot in plot_list_out])
+                    min_plot = min([min(plot) for plot in plot_list_out])
 
-                if percent_of == 'all' or percent_of == 'immune' or percent_of == 'tissue':
+                    fig, axs = plt.subplots(nrows=1, ncols=1, figsize=(4, 4))
 
-                    final_output_folder = output_folder + '/' + 'Phenotyping/' + 'Percent of ' + percent_of + ' cells per ' + split_by + '/'
+                    if statistics == 'wilcoxon' and split_by == 'file':
 
-                    if os.path.isdir(final_output_folder) == True:
-                        pass
-                    else:
-                        os.makedirs(final_output_folder)
+                        for x in range(0, len(plot_list_out[0])):
+                            axs.plot([1, 2], [plot_list_out[0][x], plot_list_out[1][x]], color='gray', alpha=0.25)
 
-                    axs.set_title(str(phenotype[0]) + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2]))
-                    axs.set_ylabel('Percent of ' + percent_of + ' cells per ' + split_by)
-                    export_file_path = final_output_folder + str(phenotype[0]) + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2]) + '.png'
+                    axs.scatter([1 for x in range(len(plot_list_out[0]))], plot_list_out[0], c=colors[0], s=45)
+                    axs.scatter([2 for x in range(len(plot_list_out[1]))], plot_list_out[1], c=colors[1], s=45)
+                    axs.boxplot(plot_list_out, widths=0.4)
 
-                if percent_of == 'lineage':
+                    if split_by == 'file':
+                        if 0.005 < p < 0.05:
+                            axs.plot([1.25, 1.75], [max_plot * 1.15, max_plot * 1.15], color='black')
+                            axs.text(1.45, max_plot * 1.2, '*', fontsize=18, color='black')
+                        elif 0.0005 < p < 0.005:
+                            axs.plot([1.25, 1.75], [max_plot * 1.15, max_plot * 1.15], color='black')
+                            axs.text(1.41, max_plot * 1.2, '**', fontsize=18, color='black')
+                        elif 0.00005 < p < 0.0005:
+                            axs.plot([1.25, 1.75], [max_plot * 1.15, max_plot * 1.15], color='black')
+                            axs.text(1.37, max_plot * 1.2, '***', fontsize=18, color='black')
+                        elif p < 0.00005:
+                            axs.plot([1.25, 1.75], [max_plot * 1.15, max_plot * 1.15], color='black')
+                            axs.text(1.34, max_plot * 1.2, '****', fontsize=18, color='black')
 
-                    final_output_folder = output_folder + '/' + 'Phenotyping/' + 'Percent of ' + str(phenotype[0]) + ' cells per ' + split_by + '/'
+                        axs.set_ylim(min_plot - ((max_plot - min_plot) * 0.1), max_plot * 1.35)
+                        axs.set_xticks([1, 2], ['Metadata 1', 'Metadata 2'], rotation=-90)
 
-                    if os.path.isdir(final_output_folder) == True:
-                        pass
-                    else:
-                        os.makedirs(final_output_folder)
+                    if select_neighboring_cell_type_and_state[0] == False:
 
-                    axs.set_title(str(phenotype[0]) + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2]))
-                    axs.set_ylabel('Percent of ' + phenotype[0] + ' cells per ' + split_by)
-                    export_file_path = final_output_folder + str(phenotype[0]) + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2]) + '.png'
+                        if percent_of == 'all' or percent_of == 'immune' or percent_of == 'tissue':
 
-            if select_neighboring_cell_type_and_state[0] == True:
+                            final_output_folder = output_folder + '/' + 'Phenotyping/' + 'Percent of ' + percent_of + ' cells per ' + split_by + '/'
 
-                if percent_of == 'all' or percent_of == 'immune' or percent_of == 'tissue':
+                            if os.path.isdir(final_output_folder) == True:
+                                pass
+                            else:
+                                os.makedirs(final_output_folder)
 
-                    final_output_folder = output_folder + '/' + 'Phenotyping/' + 'Percent of ' + percent_of + ' cells per ' + split_by + '/' + 'neighboring ' + select_neighboring_cell_type_and_state[1][0] + ' pos ' + str(select_neighboring_cell_type_and_state[1][1]) + ' neg ' + str(select_neighboring_cell_type_and_state[1][1]) + '/'
+                            axs.set_title(str(phenotype[0]) + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2]))
+                            axs.set_ylabel('Percent of ' + percent_of + ' cells per ' + split_by)
+                            export_file_path = final_output_folder + str(phenotype[0]) + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2]) + '_out.png'
 
-                    if os.path.isdir(final_output_folder) == True:
-                        pass
-                    else:
-                        os.makedirs(final_output_folder)
+                        if percent_of == 'lineage':
 
-                    axs.set_title(str(phenotype[0]) + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2]) + '\n neigboring: ' + select_neighboring_cell_type_and_state[1][0] + ' pos ' + str(select_neighboring_cell_type_and_state[1][1]) + ' neg ' + str(select_neighboring_cell_type_and_state[1][1]))
-                    axs.set_ylabel('Percent of ' + percent_of + ' cells per ' + split_by)
-                    export_file_path = final_output_folder + str(phenotype[0]) + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2]) + ' neighboring ' + select_neighboring_cell_type_and_state[1][0] + ' pos ' + str(select_neighboring_cell_type_and_state[1][1]) + ' neg ' + str(select_neighboring_cell_type_and_state[1][1]) + '.png'
+                            final_output_folder = output_folder + '/' + 'Phenotyping/' + 'Percent of ' + str(phenotype[0]) + ' cells per ' + split_by + '/'
 
-                if percent_of == 'lineage':
+                            if os.path.isdir(final_output_folder) == True:
+                                pass
+                            else:
+                                os.makedirs(final_output_folder)
 
-                    final_output_folder = output_folder + '/' + 'Phenotyping/' + 'Percent of ' + str(phenotype[0]) + ' cells per ' + split_by + '/'  + 'neighboring ' + select_neighboring_cell_type_and_state[1][0] + ' pos ' + str(select_neighboring_cell_type_and_state[1][1]) + ' neg ' + str(select_neighboring_cell_type_and_state[1][1]) + '/'
+                            axs.set_title(str(phenotype[0]) + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2]))
+                            axs.set_ylabel('Percent of ' + phenotype[0] + ' cells per ' + split_by)
+                            export_file_path = final_output_folder + str(phenotype[0]) + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2]) + '_out.png'
 
-                    if os.path.isdir(final_output_folder) == True:
-                        pass
-                    else:
-                        os.makedirs(final_output_folder)
+                    if select_neighboring_cell_type_and_state[0] == True:
 
-                    axs.set_title(str(phenotype[0]) + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2]) + '\n neigboring: ' + select_neighboring_cell_type_and_state[1][0] + ' pos ' + str(select_neighboring_cell_type_and_state[1][1]) + ' neg ' + str(select_neighboring_cell_type_and_state[1][1]))
-                    axs.set_ylabel('Percent of ' + phenotype[0] + ' cells per ' + split_by)
-                    export_file_path = final_output_folder + str(phenotype[0]) + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2]) + ' neighboring ' + select_neighboring_cell_type_and_state[1][0] + ' pos ' + str(select_neighboring_cell_type_and_state[1][1]) + ' neg ' + str(select_neighboring_cell_type_and_state[1][1]) + '.png'
+                        if percent_of == 'all' or percent_of == 'immune' or percent_of == 'tissue':
 
-            fig.savefig(export_file_path, bbox_inches='tight', dpi=600)
-            plt.close()
+                            final_output_folder = output_folder + '/' + 'Phenotyping/' + 'Percent of ' + percent_of + ' cells per ' + split_by + '/' + 'neighboring ' + select_neighboring_cell_type_and_state[1][0] + ' pos ' + str(select_neighboring_cell_type_and_state[1][1]) + ' neg ' + str(select_neighboring_cell_type_and_state[1][1]) + '/'
 
-        except ValueError:
-            print('The Phenotype: ' + str(phenotype[0]) + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2]) + ' does not exist')
-            continue
+                            if os.path.isdir(final_output_folder) == True:
+                                pass
+                            else:
+                                os.makedirs(final_output_folder)
 
-    plt.text(0.1, 0.1, 'p < 0.05 = *', fontsize=25, color='black')
-    plt.text(0.1, 0.2, 'p < 0.005 = **', fontsize=25, color='black')
-    plt.text(0.1, 0.3, 'p < 0.0005 = ***', fontsize=25, color='black')
-    plt.text(0.1, 0.4, 'p < 0.00005 = ****', fontsize=25, color='black')
-    plt.xlim(0, 0.5)
-    plt.ylim(0, 0.5)
+                            axs.set_title(str(phenotype[0]) + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2]) + '\n neigboring: ' + select_neighboring_cell_type_and_state[1][0] + ' pos ' + str(select_neighboring_cell_type_and_state[1][1]) + ' neg ' + str(select_neighboring_cell_type_and_state[1][1]))
+                            axs.set_ylabel('Percent of ' + percent_of + ' cells per ' + split_by)
+                            export_file_path = final_output_folder + str(phenotype[0]) + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2]) + ' neighboring ' + select_neighboring_cell_type_and_state[1][0] + ' pos ' + str(select_neighboring_cell_type_and_state[1][1]) + ' neg ' + str(select_neighboring_cell_type_and_state[1][1]) + '_out.png'
 
-    plt.savefig(output_folder + '/' + 'Phenotyping/' + 'p_value_legend.png', bbox_inches='tight', dpi=600)
-    plt.close()
+                        if percent_of == 'lineage':
 
-    if select_neighboring_cell_type_and_state[0] == False:
+                            final_output_folder = output_folder + '/' + 'Phenotyping/' + 'Percent of ' + str(phenotype[0]) + ' cells per ' + split_by + '/' + 'neighboring ' + select_neighboring_cell_type_and_state[1][0] + ' pos ' + str(select_neighboring_cell_type_and_state[1][1]) + ' neg ' + str(select_neighboring_cell_type_and_state[1][1]) + '/'
 
-        analysis_df_phenotypes.to_csv(output_folder + '/' + 'Phenotyping/' + 'Phenotypes.csv')
-        df_final_values.to_csv(final_output_folder + 'Phenotype_plots.csv')
+                            if os.path.isdir(final_output_folder) == True:
+                                pass
+                            else:
+                                os.makedirs(final_output_folder)
 
-    if select_neighboring_cell_type_and_state[0] == True:
+                            axs.set_title(str(phenotype[0]) + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2]) + '\n neigboring: ' + select_neighboring_cell_type_and_state[1][0] + ' pos ' + str(select_neighboring_cell_type_and_state[1][1]) + ' neg ' + str(select_neighboring_cell_type_and_state[1][1]))
+                            axs.set_ylabel('Percent of ' + phenotype[0] + ' cells per ' + split_by)
+                            export_file_path = final_output_folder + str(phenotype[0]) + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2]) + ' neighboring ' + select_neighboring_cell_type_and_state[1][0] + ' pos ' + str(select_neighboring_cell_type_and_state[1][1]) + ' neg ' + str(select_neighboring_cell_type_and_state[1][1]) + '_out.png'
 
-        analysis_df_phenotypes.to_csv(output_folder + '/' + 'Phenotyping/' + 'Phenotypes neighboring' + select_neighboring_cell_type_and_state[1][0] + ' pos ' + str(select_neighboring_cell_type_and_state[1][1]) + ' neg ' + str(select_neighboring_cell_type_and_state[1][1]) + '.csv')
-        df_final_values.to_csv(final_output_folder + 'Phenotypes neighboring' + select_neighboring_cell_type_and_state[1][0] + ' pos ' + str(select_neighboring_cell_type_and_state[1][1]) + ' neg ' + str(select_neighboring_cell_type_and_state[1][1]) + '_plots.csv')
+                    fig.savefig(export_file_path, bbox_inches='tight', dpi=600)
+                    plt.close()
 
-#-----------------------------------------------------------------------------------------------------------------------------------
+                except ValueError:
+                    print('The Phenotype: ' + str(phenotype[0]) + ' pos ' + str(phenotype[1]) + ' neg ' + str(phenotype[2]) + ' does not exist')
+                    continue
 
+        plt.text(0.1, 0.1, 'p < 0.05 = *', fontsize=25, color='black')
+        plt.text(0.1, 0.2, 'p < 0.005 = **', fontsize=25, color='black')
+        plt.text(0.1, 0.3, 'p < 0.0005 = ***', fontsize=25, color='black')
+        plt.text(0.1, 0.4, 'p < 0.00005 = ****', fontsize=25, color='black')
+        plt.xlim(0, 0.5)
+        plt.ylim(0, 0.5)
+
+        plt.savefig(output_folder + '/' + 'Phenotyping/' + 'p_value_legend.png', bbox_inches='tight', dpi=600)
+        plt.close()
+
+        if select_neighboring_cell_type_and_state[0] == False:
+
+            analysis_df_phenotypes.to_csv(final_output_folder + 'Phenotypes.csv')
+
+            if select_area == False:
+                df_final_values.to_csv(final_output_folder + 'Phenotype_plots.csv')
+
+            if select_area == True:
+                df_final_values_in.to_csv(final_output_folder + 'Phenotype_plots_in.csv')
+                df_final_values_out.to_csv(final_output_folder + 'Phenotype_plots_out.csv')
+
+        if select_neighboring_cell_type_and_state[0] == True:
+
+            analysis_df_phenotypes.to_csv(output_folder + '/' + 'Phenotyping/' + 'Phenotypes neighboring' + select_neighboring_cell_type_and_state[1][0] + ' pos ' + str(select_neighboring_cell_type_and_state[1][1]) + ' neg ' + str(select_neighboring_cell_type_and_state[1][1]) + '.csv')
+
+            if select_area == False:
+                df_final_values.to_csv(final_output_folder + 'Phenotypes neighboring' + select_neighboring_cell_type_and_state[1][0] + ' pos ' + str(select_neighboring_cell_type_and_state[1][1]) + ' neg ' + str(select_neighboring_cell_type_and_state[1][1]) + '_plots.csv')
+
+            if select_area == True:
+                df_final_values_in.to_csv(final_output_folder + 'Phenotypes neighboring' + select_neighboring_cell_type_and_state[1][0] + ' pos ' + str(select_neighboring_cell_type_and_state[1][1]) + ' neg ' + str(select_neighboring_cell_type_and_state[1][1]) + '_plots_in.csv')
+                df_final_values_in.to_csv(final_output_folder + 'Phenotypes neighboring' + select_neighboring_cell_type_and_state[1][0] + ' pos ' + str(select_neighboring_cell_type_and_state[1][1]) + ' neg ' + str(select_neighboring_cell_type_and_state[1][1]) + '_plots_out.csv')
+
+
+
+
+"""
+
+#---------------------------------------------------------------------------------------------------------------------------------
+    
     if analyse_neighboring_cells == True:
 
         if select_area == True:
@@ -2243,6 +3189,13 @@ def compare_the_same_phenotypes_and_neighbors_in_different_tissue(directory, fil
 
         plt.savefig(output_folder + '/' + 'Phenotype states/' + 'p_value_legend.png', bbox_inches='tight', dpi=600)
         plt.close()
+
+
+"""
+
+
+
+
 
 #too think about
 '''
