@@ -21,7 +21,7 @@ To use a preliminary package install <a href="https://git-scm.com/downloads"><st
 If you are interested in using this pipeline, have any questions or want to help or contribute to its development you can contact me under:
 niklas.vesper@uniklinik-freiburg.de
 
-## Visual explanation of the algorithm to generate subcellular information 
+## Visual explanation of the <ins>I</ins>mage anaysis of <ins>S</ins>ubcellular localizati<ins>O</ins>n (ISO) algorithm
 
 ![](https://github.com/NiklasVesper/ImagingCytometryTools/blob/main/Images/algorithm.png)
 
