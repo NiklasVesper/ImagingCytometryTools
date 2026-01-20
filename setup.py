@@ -5,7 +5,7 @@ here = pathlib.Path(__file__).parent.resolve()
 long_description = (here / "README.md").read_text(encoding="utf-8")
 
 setup(name="ImagingCytometryTools",
-      version="1.0.2",
+      version="1.0.3",
       description="Analysis of complex imaging data",
       long_description=long_description,
       url="https://github.com/NiklasVesper/ImagingCytometryTools",
