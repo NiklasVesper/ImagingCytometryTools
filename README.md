@@ -41,3 +41,4 @@ niklas.vesper@uniklinik-freiburg.de
 1.0.2: Updated generation of neighborhood and subcellular data as well as test functions.<br />
 1.0.3: Updated generation subcellular data.<br />
 1.0.4: Added clustering.<br />
+1.0.5: Updated clustering.<br />
