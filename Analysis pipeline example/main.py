@@ -116,7 +116,7 @@ if __name__ == "__main__":
     
     file_phenotypes = r'full_cell_neighborhood_5'
     output_folder_phenotypes = r'full cell phenotypes and neighborhood 5'
-    run_assign_cell_types_and_states(folder_dir_data,
+    run_assign_cell_types_and_states(folder_directory_with_data,
                                      file_phenotypes,
                                      output_folder_phenotypes,
                                      overwrite_existing_files=True)
@@ -127,7 +127,7 @@ if __name__ == "__main__":
     max_pixel_images = ['Eu151Di','Pt194Di'] #'Dy162Di','Pt194Di'
     proteins = ['ATF6','Nucleus_HH3'] #'CD8','Nucleus_HH3'
     contrast_multipliers = [1750,3000] #2000,3000
-    run_generate_image_galleries(folder_dir_data,
+    run_generate_image_galleries(folder_directory_with_data,
                                  file_phenotypes,
                                  analysis,
                                  output_folder_images,
