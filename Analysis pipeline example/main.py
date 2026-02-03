@@ -26,7 +26,7 @@ if __name__ == "__main__":
                                       generate_folders_per_mcd_file=True)
 
     split_images_for_CellProfiler(folder_directory_with_data,
-                                  crop_count=4)
+                                  image_size_threshold=600000)
 
 # Segmentation and general image processing--------------------------------------------------------------------------------
 
