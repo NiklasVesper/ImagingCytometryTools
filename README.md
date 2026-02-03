@@ -42,4 +42,4 @@ niklas.vesper@uniklinik-freiburg.de
 1.0.3: Updated generation subcellular data.<br />
 1.0.4: Added clustering.<br />
 1.0.5: Updated clustering.<br />
-1.0.6: Changes to image croping.<br />
+1.0.6: Changes to image splitting.<br />
