@@ -47,14 +47,14 @@ if __name__ == "__main__":
     from ImagingCytometryTools.run_generate_neighborhood import run_generate_neighborhood
     from ImagingCytometryTools.run_test_outline_identification_and_matching import run_test_outline_identification_and_matching
 
-    
+    distance = 5
     file_neighborhood = r'RunCellpose_C'
     output_folder_neighborhood = r'full cell neighborhood ' + str(distance)
     run_generate_neighborhood(folder_directory_with_data,
                               file_neighborhood,
                               output_folder_neighborhood,
                               add_cellular_information_and_outline=True,
-                              use_own_neighborhood_radius=[True, 5])
+                              use_own_neighborhood_radius=[True, distance])
     
     file_test = r'full_cell_neighborhood_5'
     output_folder_neighborhood_analysis_test = r'neighborhood test outline'
@@ -84,14 +84,14 @@ if __name__ == "__main__":
                                           mode='basic',
                                           nucleus_count=1)
     
-    
+    distance = 5
     file_neighborhood_subcell = r'subcellular_information'
     output_folder_neighborhood_subcell = r'subcellular and neighborhood ' + str(distance)
     run_generate_neighborhood(folder_directory_with_data,
                               file_neighborhood_subcell,
                               output_folder_neighborhood_subcell,
                               add_cellular_information_and_outline=False,
-                              use_own_neighborhood_radius=[True, 5])
+                              use_own_neighborhood_radius=[True, distance])
     
     file_test = r'subcellular_and_neigboorhood_5'
     output_folder_subcellular_localisation_analysis_test = r'subcellular test outline'
