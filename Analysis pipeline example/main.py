@@ -31,7 +31,8 @@ if __name__ == "__main__":
 # Segmentation and general image processing--------------------------------------------------------------------------------
 
     '''
-    For the Segmentation and any additional image processing a CellProfiler pipeline is used. 
+    For the Segmentation and any additional image processing a CellProfiler pipeline is used.
+    In the future there also will be an end to end solution avalible.
     An example pipeline can be found under: https://github.com/NiklasVesper/ImagingCytometryTools/tree/main/Cellprofiler%20pipelines
 
     For this CellProfiler pipeline Cellpose 2 is required as a plugin. Instructions for the plugin installation can be found under:
