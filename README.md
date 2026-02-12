@@ -26,7 +26,6 @@ niklas.vesper@uniklinik-freiburg.de
 ![](https://github.com/NiklasVesper/ImagingCytometryTools/blob/main/Images/algorithm.png)
 
 ## References 
-(*Shared first)
 
 (1) Pachitariu, M., & Stringer, C. (2022). Cellpose 2.0: how to train your own model. Nature methods, 19(12), 1634-1641. https://doi.org/10.1038/s41592-022-01663-4
 
@@ -34,7 +33,7 @@ niklas.vesper@uniklinik-freiburg.de
 
 (3) Stirling, D. R., Swain-Bowden, M. J., Lucas, A. M., Carpenter, A. E., Cimini, B. A., & Goodman, A. (2021). CellProfiler 4: improvements in speed, utility and usability. BMC bioinformatics, 22(1), 433. https://doi.org/10.1186/s12859-021-04344-9
 
-(4) Li, X.*, Lebeaupin, C.*, Kadianaki, A., Druelle-Cedano, C., Vesper, N., Rennert, C., Huguet-Pradell, J., Gomez Ramos, B., Fan, C., Piecyk, R. S., Zizmare, L., Ramadori, P., Li, L., Frick, L., Qiu, M., Zhang, C., Martins Nascentes Melo, L., Ranvir, V. P., Shen, P., & Hanselmann, J. (2026). Activated ATF6α is a hepatic tumour driver restricting immunosurveillance. Nature. https://doi.org/10.1038/s41586-025-10036-8
+(4) *Li, X., *Lebeaupin, C., Kadianaki, A., Druelle-Cedano, C., Vesper, N., Rennert, C., Huguet-Pradell, J., Gomez Ramos, B., Fan, C., Piecyk, R. S., Zizmare, L., Ramadori, P., Li, L., Frick, L., Qiu, M., Zhang, C., Martins Nascentes Melo, L., Ranvir, V. P., Shen, P., & Hanselmann, J. (2026). Activated ATF6α is a hepatic tumour driver restricting immunosurveillance. Nature. (*Shared first) https://doi.org/10.1038/s41586-025-10036-8
 
 ## Release history
 
