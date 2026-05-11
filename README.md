@@ -6,7 +6,7 @@ improved on that, but these algorithms only allow cellular and/or nuclear segmen
 
 ImagingCytometryTools is a collection of scripts that allows the user to generate subcellular information out of a Cellpose segmentation in conjunction with a CellProfiler pipeline via a novel algorithm (3, 4). The primary advantage of this approach is an improved characterization of transcription factor translocation or the localization of oncogenes. The pipeline has a focus on imaging mass cytometry, but it can easily be used for any other imaging method.
 
-**If you use this pipeline or its associated package to generate generate subcellular information please cite:** <a href="https://doi.org/10.1038/s41586-025-10036-8"><strong>Li, Lebeaupin, et al.</strong></a>
+**If you use this pipeline or its associated package to generate subcellular information please cite:** <a href="https://doi.org/10.1038/s41586-025-10036-8"><strong>Li, Lebeaupin, et al.</strong></a>
 
 The foundation of the analysis is a <a href="https://github.com/CellProfiler/CellProfiler-plugins/tree/master"><strong>CellProfiler pipeline with Cellpose as a 
 plugin</strong></a>.
