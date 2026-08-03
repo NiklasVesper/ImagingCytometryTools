@@ -43,4 +43,4 @@ niklas.vesper@uniklinik-freiburg.de
 1.0.4: Added clustering.<br />
 1.0.5: Updated clustering.<br />
 1.0.6: Changes to image splitting.<br />
-1.0.7: Added automated phenotyping analysis.<br />
+1.0.7: Added phenotyping analysis.<br />
